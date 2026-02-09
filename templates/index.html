@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Me Maybe - QR Pod Scaling</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="big-screen-container">
+        <header class="big-screen-header">
+            <h1>Scan Me Maybe</h1>
+            <p class="subtitle">QR-Driven Pod Scaling with Karpenter on Exoscale</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Column: QR Code -->
+            <div class="qr-column">
+                <div class="qr-card">
+                    <h2>Scan to Create Pods</h2>
+                    <div id="qrcode" class="qr-code-display"></div>
+                    <p class="qr-instructions">Scan with your phone to create 1-10 random pods</p>
+                </div>
+            </div>
+
+            <!-- Center Column: Visualization -->
+            <div class="visualization-column">
+                <div class="icon-display">
+                    <div id="scaling-icon" class="scaling-icon-big">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="10" y="10" width="30" height="30" fill="#4CAF50" opacity="0.8"/>
+                            <rect x="45" y="10" width="30" height="30" fill="#2196F3" opacity="0.8"/>
+                            <rect x="80" y="10" width="10" height="30" fill="#FF9800" opacity="0.8"/>
+                            <rect x="10" y="45" width="30" height="30" fill="#9C27B0" opacity="0.8"/>
+                            <rect x="45" y="45" width="30" height="30" fill="#F44336" opacity="0.8"/>
+                            <rect x="80" y="45" width="10" height="30" fill="#00BCD4" opacity="0.8"/>
+                            <rect x="10" y="80" width="30" height="10" fill="#FFEB3B" opacity="0.8"/>
+                            <rect x="45" y="80" width="30" height="10" fill="#795548" opacity="0.8"/>
+                            <rect x="80" y="80" width="10" height="10" fill="#607D8B" opacity="0.8"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Metrics -->
+            <div class="metrics-column">
+                <div class="metric-card metric-pods">
+                    <div class="metric-icon">📦</div>
+                    <div class="metric-value" id="pod-count">0</div>
+                    <div class="metric-label">Pods</div>
+                </div>
+
+                <div class="metric-card metric-nodes">
+                    <div class="metric-icon">🖥️</div>
+                    <div class="metric-value" id="node-count">0</div>
+                    <div class="metric-label">Nodes</div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="big-screen-footer">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Live Updates Active</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const SCAN_URL = "{{ scan_url }}";
+        const AUTH_TOKEN = "{{ auth_token }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

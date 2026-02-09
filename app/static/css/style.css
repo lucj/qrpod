@@ -1,0 +1,315 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+    overflow-x: hidden;
+}
+
+/* Big Screen Layout */
+.big-screen-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+}
+
+.big-screen-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.big-screen-header h1 {
+    font-size: 5rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.subtitle {
+    font-size: 1.8rem;
+    font-weight: 300;
+    opacity: 0.95;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 40px;
+    flex: 1;
+    align-items: center;
+}
+
+/* QR Code Column */
+.qr-column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.qr-card {
+    background: white;
+    border-radius: 30px;
+    padding: 50px 40px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.qr-card h2 {
+    font-size: 2.5rem;
+    color: #667eea;
+    margin-bottom: 30px;
+}
+
+.qr-code-display {
+    display: inline-block;
+    padding: 30px;
+    background: white;
+    border-radius: 20px;
+    margin: 20px 0;
+}
+
+.qr-instructions {
+    font-size: 1.3rem;
+    color: #666;
+    margin-top: 20px;
+    line-height: 1.6;
+}
+
+/* Visualization Column */
+.visualization-column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.icon-display {
+    background: white;
+    border-radius: 50%;
+    width: 500px;
+    height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.scaling-icon-big {
+    width: 300px;
+    height: 300px;
+    transition: transform 0.8s ease-in-out;
+    transform: scale(1);
+}
+
+.scaling-icon-big svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+/* Metrics Column */
+.metrics-column {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 30px;
+    padding: 50px 30px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+}
+
+.metric-icon {
+    font-size: 5rem;
+    margin-bottom: 20px;
+}
+
+.metric-value {
+    font-size: 6rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.metric-label {
+    font-size: 2rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+/* Footer */
+.big-screen-footer {
+    margin-top: 40px;
+    text-align: center;
+    color: white;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-size: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.status-dot {
+    width: 15px;
+    height: 15px;
+    background: #4CAF50;
+    border-radius: 50%;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.2);
+    }
+}
+
+/* Value update animation */
+.metric-value.updated {
+    animation: value-bump 0.3s ease;
+}
+
+@keyframes value-bump {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1600px) {
+    .big-screen-header h1 {
+        font-size: 4rem;
+    }
+
+    .subtitle {
+        font-size: 1.5rem;
+    }
+
+    .icon-display {
+        width: 400px;
+        height: 400px;
+    }
+
+    .scaling-icon-big {
+        width: 250px;
+        height: 250px;
+    }
+
+    .metric-value {
+        font-size: 5rem;
+    }
+
+    .metric-icon {
+        font-size: 4rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .big-screen-header h1 {
+        font-size: 3rem;
+    }
+
+    .icon-display {
+        width: 350px;
+        height: 350px;
+    }
+
+    .scaling-icon-big {
+        width: 200px;
+        height: 200px;
+    }
+
+    .metrics-column {
+        flex-direction: row;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .big-screen-container {
+        padding: 20px;
+    }
+
+    .big-screen-header h1 {
+        font-size: 2.5rem;
+    }
+
+    .subtitle {
+        font-size: 1.2rem;
+    }
+
+    .qr-card {
+        padding: 30px 20px;
+    }
+
+    .qr-card h2 {
+        font-size: 1.8rem;
+    }
+
+    .icon-display {
+        width: 250px;
+        height: 250px;
+    }
+
+    .scaling-icon-big {
+        width: 150px;
+        height: 150px;
+    }
+
+    .metric-value {
+        font-size: 4rem;
+    }
+
+    .metric-icon {
+        font-size: 3rem;
+    }
+
+    .metric-label {
+        font-size: 1.5rem;
+    }
+
+    .metrics-column {
+        flex-direction: column;
+    }
+}
