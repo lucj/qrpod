@@ -1,4 +1,4 @@
-# Scan Me Maybe: QR-Driven Pod Scaling with Karpenter on Exoscale
+## Scan Me Maybe: QR Code Driven Pod Scaling With Karpenter
 
 A demo application for Kubernetes that displays a QR code on a big screen. When participants scan it with their phones, it creates 1-10 random pods and shows a visual icon that inflates as pods scale up. Perfect for presentations and demos showcasing Karpenter node autoscaling.
 
