@@ -1,0 +1,13 @@
+apiVersion: v2
+name: qr-pods
+description: QR-Driven Pod Scaling with Karpenter on Exoscale
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - kubernetes
+  - demo
+  - karpenter
+  - scaling
+maintainers:
+  - name: QR Pods Team

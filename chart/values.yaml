@@ -1,0 +1,65 @@
+# Default values for qr-pods chart
+
+# Application configuration
+app:
+  # The public URL of your application (update after deployment)
+  url: "http://localhost:5000"
+
+  # Authentication token - leave empty to auto-generate
+  # If empty, a random token will be generated
+  authToken: ""
+
+  # Kubernetes namespace for pod creation
+  namespace: default
+
+# Image configuration
+image:
+  repository: qr-app
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Image pull secrets for private registries (e.g., GHCR)
+imagePullSecrets:
+  # Enable creation of image pull secret
+  create: true
+  # Name of the secret
+  name: ghcr-secret
+  # Registry credentials (leave empty to skip secret creation)
+  registry: ghcr.io
+  username: ""
+  password: ""
+  email: ""
+
+# Deployment configuration
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 5000
+
+# RBAC configuration
+rbac:
+  create: true
+  serviceAccount:
+    name: qr-app-sa
+
+# Pod configuration for created demo pods
+demoPods:
+  image: nginx:alpine
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi

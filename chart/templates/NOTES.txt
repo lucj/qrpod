@@ -1,0 +1,49 @@
+QR Pods has been deployed!
+
+1. Get the application URL:
+
+{{- if eq .Values.service.type "LoadBalancer" }}
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+
+  Watch the status with:
+  kubectl get service {{ include "qr-pods.fullname" . }} --watch
+
+  Once the EXTERNAL-IP is assigned, run:
+  export APP_URL=http://$(kubectl get service {{ include "qr-pods.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  echo "Application URL: $APP_URL"
+
+  Then update the deployment with the correct URL:
+  helm upgrade {{ .Release.Name }} ./chart --set app.url=$APP_URL
+
+{{- else if eq .Values.service.type "NodePort" }}
+
+  export NODE_PORT=$(kubectl get service {{ include "qr-pods.fullname" . }} -o jsonpath='{.spec.ports[0].nodePort}')
+  export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')
+  echo "Application URL: http://$NODE_IP:$NODE_PORT"
+
+{{- else }}
+
+  kubectl port-forward service/{{ include "qr-pods.fullname" . }} 5000:{{ .Values.service.port }}
+  echo "Application URL: http://localhost:5000"
+
+{{- end }}
+
+2. View the application logs:
+
+  kubectl logs -f deployment/{{ include "qr-pods.fullname" . }}
+
+3. Get the auth token (if you need it):
+
+  kubectl get secret {{ include "qr-pods.fullname" . }} -o jsonpath='{.data.auth-token}' | base64 -d
+  echo
+
+4. Watch pods being created:
+
+  kubectl get pods -l app=qr-scaling-demo --watch
+
+5. Monitor node scaling (for Karpenter demos):
+
+  kubectl get nodes --watch
+
+Happy scaling! 🚀

@@ -11,8 +11,9 @@ build
 .git
 .gitignore
 .env
+.envrc
 .venv
 venv
-kubernetes
+chart
 README.md
 .DS_Store

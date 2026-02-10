@@ -1,0 +1,47 @@
+helmDefaults:
+  wait: true
+  timeout: 300
+  recreatePods: false
+  force: false
+
+releases:
+  - name: qr-pods
+    namespace: default
+    chart: ./chart
+    values:
+      - ./chart/values.yaml
+    set:
+      # Override these values or set them via environment variables
+      - name: app.url
+        value: {{ requiredEnv "APP_URL" | default "http://localhost:5000" | quote }}
+      - name: app.authToken
+        value: {{ env "AUTH_TOKEN" | default "" | quote }}
+      - name: image.repository
+        value: {{ env "IMAGE_REPOSITORY" | default "qr-app" | quote }}
+      - name: image.tag
+        value: {{ env "IMAGE_TAG" | default "latest" | quote }}
+      # Image pull secrets for private registries
+      - name: imagePullSecrets.create
+        value: {{ env "REGISTRY_CREATE_SECRET" | default "true" }}
+      - name: imagePullSecrets.registry
+        value: {{ env "REGISTRY_SERVER" | default "ghcr.io" | quote }}
+      - name: imagePullSecrets.username
+        value: {{ env "REGISTRY_USERNAME" | default "" | quote }}
+      - name: imagePullSecrets.password
+        value: {{ env "REGISTRY_PASSWORD" | default "" | quote }}
+      - name: imagePullSecrets.email
+        value: {{ env "REGISTRY_EMAIL" | default "" | quote }}
+
+# Example usage:
+# Basic deployment:
+#   APP_URL=http://1.2.3.4 helmfile sync
+#
+# With custom image:
+#   APP_URL=http://1.2.3.4 IMAGE_REPOSITORY=myregistry/qr-app IMAGE_TAG=v1.0.0 helmfile sync
+#
+# With private GHCR registry:
+#   APP_URL=http://1.2.3.4 \
+#   IMAGE_REPOSITORY=ghcr.io/username/qr-app \
+#   REGISTRY_USERNAME=github_username \
+#   REGISTRY_PASSWORD=ghp_xxxx \
+#   helmfile sync

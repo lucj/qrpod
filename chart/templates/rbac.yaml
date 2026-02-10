@@ -1,0 +1,60 @@
+{{- if .Values.rbac.create -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "qr-pods.serviceAccountName" . }}
+  labels:
+    {{- include "qr-pods.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "qr-pods.fullname" . }}
+  labels:
+    {{- include "qr-pods.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["create", "list", "get", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "qr-pods.fullname" . }}
+  labels:
+    {{- include "qr-pods.labels" . | nindent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "qr-pods.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "qr-pods.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "qr-pods.fullname" . }}-node-reader
+  labels:
+    {{- include "qr-pods.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list", "get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "qr-pods.fullname" . }}-node-reader
+  labels:
+    {{- include "qr-pods.labels" . | nindent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "qr-pods.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "qr-pods.fullname" . }}-node-reader
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "qr-pods.fullname" . }}
+  labels:
+    {{- include "qr-pods.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "qr-pods.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "qr-pods.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "qr-pods.serviceAccountName" . }}
+      {{- if .Values.imagePullSecrets.create }}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecrets.name }}
+      {{- end }}
+      containers:
+      - name: qr-app
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.targetPort }}
+          name: http
+        env:
+        - name: AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "qr-pods.fullname" . }}
+              key: auth-token
+        - name: NAMESPACE
+          value: {{ .Values.app.namespace | quote }}
+        - name: APP_URL
+          value: {{ .Values.app.url | quote }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.service.targetPort }}
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.service.targetPort }}
+          initialDelaySeconds: 5
+          periodSeconds: 5

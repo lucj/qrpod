@@ -20,7 +20,60 @@ A demo application for Kubernetes that displays a QR code on a big screen. When 
 
 ## Quick Start
 
-### 1. Generate and Configure Token
+### Option 1: Deploy with Helm (Recommended)
+
+```bash
+# 1. Build and push image
+docker build -t qr-app:latest .
+
+# 2. Load to kind (local) or push to registry (remote)
+kind load docker-image qr-app:latest
+# OR
+docker tag qr-app:latest YOUR_REGISTRY/qr-app:latest
+docker push YOUR_REGISTRY/qr-app:latest
+
+# 3. Deploy with Helm
+helm install qr-pods ./chart
+
+# 4. Get external IP
+kubectl get service qr-pods
+
+# 5. Update APP_URL
+helm upgrade qr-pods ./chart --set app.url=http://YOUR_EXTERNAL_IP
+```
+
+### Option 2: Deploy with Helmfile (Best for automation)
+
+**Method A: Using .env file (Recommended)**
+
+```bash
+# 1. Copy example env file and configure
+cp .env.example .env
+# Edit .env with your values (APP_URL, IMAGE_REPOSITORY, REGISTRY_USERNAME, etc.)
+
+# 2. Deploy with script
+./deploy.sh
+```
+
+**Method B: Export environment variables**
+
+```bash
+# Set all required variables
+export APP_URL=http://YOUR_EXTERNAL_IP
+export IMAGE_REPOSITORY=ghcr.io/username/qr-app
+export REGISTRY_USERNAME=your_github_username
+export REGISTRY_PASSWORD=ghp_your_github_token
+
+# Deploy
+helmfile sync
+```
+
+### Option 3: Manual Kubernetes Manifests
+
+<details>
+<summary>Click to expand manual deployment steps</summary>
+
+#### 1. Generate and Configure Token
 
 ```bash
 # Generate token
@@ -32,7 +85,7 @@ echo -n "YOUR_TOKEN" | base64
 # Update kubernetes/secret.yaml with the base64 value
 ```
 
-### 2. Build and Push Image
+#### 2. Build and Push Image
 
 ```bash
 docker build -t qr-app:latest .
@@ -44,7 +97,7 @@ docker push YOUR_REGISTRY/qr-app:latest
 
 Update `image` in `kubernetes/app-deployment.yaml` if using remote registry.
 
-### 3. Deploy to Kubernetes
+#### 3. Deploy to Kubernetes
 
 ```bash
 kubectl apply -f kubernetes/rbac.yaml
@@ -53,7 +106,7 @@ kubectl apply -f kubernetes/app-deployment.yaml
 kubectl apply -f kubernetes/app-service.yaml
 ```
 
-### 4. Get External IP and Update APP_URL
+#### 4. Get External IP and Update APP_URL
 
 ```bash
 kubectl get service qr-app
@@ -62,9 +115,74 @@ kubectl get service qr-app
 kubectl set env deployment/qr-app APP_URL=http://YOUR_EXTERNAL_IP
 ```
 
-### 5. Open on Big Screen
+</details>
+
+### Open on Big Screen
 
 Navigate to `http://YOUR_EXTERNAL_IP` on your presentation display.
+
+## Using Private Container Registry (GHCR)
+
+If your image is in a private registry like GitHub Container Registry (GHCR):
+
+### With Helm:
+
+```bash
+# Create registry secret manually
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=YOUR_GITHUB_USERNAME \
+  --docker-password=YOUR_GITHUB_TOKEN
+
+# Deploy with Helm (secret already exists)
+helm install qr-pods ./chart \
+  --set image.repository=ghcr.io/username/qr-app \
+  --set imagePullSecrets.create=false
+```
+
+Or let Helm create the secret:
+
+```bash
+helm install qr-pods ./chart \
+  --set image.repository=ghcr.io/username/qr-app \
+  --set imagePullSecrets.username=YOUR_GITHUB_USERNAME \
+  --set imagePullSecrets.password=YOUR_GITHUB_TOKEN
+```
+
+### With Helmfile:
+
+**Using .env file (easiest):**
+
+```bash
+# Configure .env file with your GHCR credentials
+cat > .env <<EOF
+APP_URL=http://YOUR_EXTERNAL_IP
+IMAGE_REPOSITORY=ghcr.io/username/qr-app
+IMAGE_TAG=latest
+REGISTRY_SERVER=ghcr.io
+REGISTRY_USERNAME=your_github_username
+REGISTRY_PASSWORD=ghp_your_github_token
+EOF
+
+# Deploy
+./deploy.sh
+```
+
+**Or export environment variables:**
+
+```bash
+export APP_URL=http://YOUR_EXTERNAL_IP
+export IMAGE_REPOSITORY=ghcr.io/username/qr-app
+export REGISTRY_USERNAME=your_github_username
+export REGISTRY_PASSWORD=ghp_your_github_token
+helmfile sync
+```
+
+### GitHub Token Setup:
+
+1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token with `read:packages` scope
+3. Use the token as `REGISTRY_PASSWORD`
 
 ## Usage Flow
 
@@ -101,17 +219,48 @@ For local Kubernetes testing with kind:
 kind create cluster
 docker build -t qr-app:latest .
 kind load docker-image qr-app:latest
+
+# Deploy with Helm
+helm install qr-pods ./chart
+kubectl port-forward service/qr-pods 5000:80
+
+# OR deploy with manual manifests
 kubectl apply -f kubernetes/
 kubectl port-forward service/qr-app 5000:80
 ```
 
 ## Configuration
 
-Environment variables in `kubernetes/app-deployment.yaml`:
+### Helm Values (`chart/values.yaml`)
 
-- `AUTH_TOKEN` - Secret token for authentication (from Secret)
-- `NAMESPACE` - Kubernetes namespace (default: `default`)
-- `APP_URL` - Public URL for QR code generation
+Key configuration options:
+
+- `app.url` - Public URL for QR code generation
+- `app.authToken` - Auth token (leave empty to auto-generate)
+- `app.namespace` - Kubernetes namespace for pod creation (default: `default`)
+- `image.repository` - Container image repository
+- `image.tag` - Container image tag
+- `service.type` - Service type (default: `LoadBalancer`)
+- `imagePullSecrets.create` - Create registry secret (default: `true`)
+- `imagePullSecrets.registry` - Registry server (default: `ghcr.io`)
+- `imagePullSecrets.username` - Registry username
+- `imagePullSecrets.password` - Registry password/token
+
+Override values with Helm:
+```bash
+helm install qr-pods ./chart \
+  --set app.url=http://1.2.3.4 \
+  --set image.repository=myregistry/qr-app \
+  --set image.tag=v1.0.0
+```
+
+Or with Helmfile environment variables:
+```bash
+export APP_URL=http://1.2.3.4
+export IMAGE_REPOSITORY=myregistry/qr-app
+export IMAGE_TAG=v1.0.0
+helmfile sync
+```
 
 ## API Endpoints
 
@@ -124,10 +273,14 @@ Environment variables in `kubernetes/app-deployment.yaml`:
 ## Cleanup
 
 ```bash
-# Delete created pods
+# Delete created demo pods
 kubectl delete pods -l app=qr-scaling-demo
 
-# Remove application
+# Remove application (Helm)
+helm uninstall qr-pods
+# OR helmfile destroy
+
+# Remove application (manual manifests)
 kubectl delete -f kubernetes/
 ```
 
@@ -164,11 +317,21 @@ exo-qrpods/
 ├── templates/
 │   ├── index.html           # Big screen display
 │   └── scan-result.html     # Mobile result page
-├── kubernetes/
+├── chart/                   # Helm chart (recommended)
+│   ├── Chart.yaml           # Chart metadata
+│   ├── values.yaml          # Default values
+│   └── templates/
+│       ├── deployment.yaml  # App deployment
+│       ├── service.yaml     # LoadBalancer service
+│       ├── rbac.yaml        # RBAC configuration
+│       ├── secret.yaml      # Auto-generated auth token
+│       └── _helpers.tpl     # Template helpers
+├── kubernetes/              # Manual manifests (alternative)
 │   ├── rbac.yaml            # RBAC (pod + node permissions)
 │   ├── secret.yaml          # Auth token
 │   ├── app-deployment.yaml  # Deployment manifest
 │   └── app-service.yaml     # LoadBalancer service
+├── helmfile.yaml            # Helmfile for automation
 └── Dockerfile
 ```
 
