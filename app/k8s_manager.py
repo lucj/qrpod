@@ -83,7 +83,7 @@ class KubernetesManager:
         try:
             pods = self.v1.list_namespaced_pod(
                 namespace=config.NAMESPACE,
-                label_selector="app=qr-scaling-demo"
+                label_selector=f"app={config.POD_LABEL}"
             )
 
             pending = [p for p in pods.items if p.status.phase == "Pending"]
