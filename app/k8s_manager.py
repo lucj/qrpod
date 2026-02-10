@@ -1,3 +1,4 @@
+import os
 import time
 import random
 from kubernetes import client, config as k8s_config
@@ -7,15 +8,21 @@ from app.config import config
 
 class KubernetesManager:
     def __init__(self):
-        try:
-            k8s_config.load_incluster_config()
-            print("Loaded in-cluster Kubernetes config")
-        except k8s_config.ConfigException:
+        kubeconfig_path = os.environ.get('KUBECONFIG')
+        if kubeconfig_path:
+            # Explicit kubeconfig provided (e.g. Docker Compose local dev)
+            k8s_config.load_kube_config(config_file=kubeconfig_path)
+            print(f"Loaded kubeconfig from {kubeconfig_path}")
+        else:
+            # Running inside a cluster: use the mounted service account token
             try:
-                k8s_config.load_kube_config()
-                print("Loaded local kubeconfig")
+                k8s_config.load_incluster_config()
+                print("Loaded in-cluster Kubernetes config")
             except k8s_config.ConfigException:
-                print("Warning: Could not load Kubernetes config")
+                raise RuntimeError(
+                    "No KUBECONFIG env var set and in-cluster config not available. "
+                    "Set KUBECONFIG to the path of your kubeconfig file."
+                )
 
         self.v1 = client.CoreV1Api()
 
@@ -32,7 +39,7 @@ class KubernetesManager:
                 "metadata": {
                     "name": pod_name,
                     "labels": {
-                        "app": "qr-scaling-demo",
+                        "app": config.POD_LABEL,
                         "created-by": "qr-scan"
                     },
                     "annotations": {
@@ -42,16 +49,16 @@ class KubernetesManager:
                 "spec": {
                     "containers": [
                         {
-                            "name": "nginx",
+                            "name": "www",
                             "image": config.POD_IMAGE,
                             "resources": {
                                 "requests": {
-                                    "cpu": "100m",
-                                    "memory": "128Mi"
+                                    "cpu": "50m",
+                                    "memory": "64Mi"
                                 },
                                 "limits": {
-                                    "cpu": "200m",
-                                    "memory": "256Mi"
+                                    "cpu": "50m",
+                                    "memory": "64Mi"
                                 }
                             }
                         }
@@ -79,15 +86,13 @@ class KubernetesManager:
                 label_selector="app=qr-scaling-demo"
             )
 
-            running_pods = [
-                p for p in pods.items
-                if p.status.phase in ["Running", "Pending"]
-            ]
+            pending = [p for p in pods.items if p.status.phase == "Pending"]
+            running = [p for p in pods.items if p.status.phase == "Running"]
 
-            return len(running_pods)
+            return {"total": len(running) + len(pending), "pending": len(pending)}
         except ApiException as e:
             print(f"Error getting pod count: {e}")
-            return 0
+            return {"total": 0, "pending": 0}
 
     def get_node_count(self):
         try:

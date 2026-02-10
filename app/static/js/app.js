@@ -27,6 +27,7 @@ async function updatePodCount() {
 
         const data = await response.json();
         const newCount = data.count;
+        const newPending = data.pending;
 
         if (newCount !== currentPodCount) {
             currentPodCount = newCount;
@@ -43,6 +44,13 @@ async function updatePodCount() {
             }
 
             updateIconScale();
+        }
+
+        const podPendingElement = document.getElementById('pod-pending');
+        if (podPendingElement) {
+            podPendingElement.textContent = newPending > 0
+                ? `${newPending} pending`
+                : '';
         }
     } catch (error) {
         console.error('Error updating pod count:', error);
@@ -73,19 +81,31 @@ async function updateNodeCount() {
                     nodeCountElement.classList.remove('updated');
                 }, 300);
             }
+
+            updateIconScale();
         }
     } catch (error) {
         console.error('Error updating node count:', error);
     }
 }
 
+const MAX_PODS = 2000;
+const MAX_NODES = 30;
+const MIN_SIZE_PX = 80;
+
 function updateIconScale() {
     const icon = document.getElementById('scaling-icon');
+    const column = document.querySelector('.visualization-column');
 
-    if (icon) {
-        // Linear scaling: grows 10% per pod, max 5x
-        const scale = Math.min(1 + (currentPodCount * 0.1), 5);
-        icon.style.transform = `scale(${scale})`;
+    if (icon && column) {
+        const maxSize = Math.min(column.clientWidth, column.clientHeight);
+        const podRatio = Math.min(currentPodCount / MAX_PODS, 1);
+        const nodeRatio = Math.min(currentNodeCount / MAX_NODES, 1);
+        const ratio = Math.max(podRatio, nodeRatio);
+        const size = Math.round(MIN_SIZE_PX + (maxSize - MIN_SIZE_PX) * ratio);
+
+        icon.style.width  = `${size}px`;
+        icon.style.height = `${size}px`;
     }
 }
 

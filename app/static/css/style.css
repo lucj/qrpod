@@ -88,25 +88,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.icon-display {
-    background: white;
-    border-radius: 50%;
-    width: 500px;
-    height: 500px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
-    position: relative;
+    overflow: hidden;
 }
 
 .scaling-icon-big {
-    width: 300px;
-    height: 300px;
-    transition: transform 0.8s ease-in-out;
-    transform: scale(1);
+    width: 80px;
+    height: 80px;
+    transition: width 0.8s ease-in-out, height 0.8s ease-in-out;
 }
 
 .scaling-icon-big img {
@@ -136,12 +124,6 @@ body {
     transform: translateY(-5px);
 }
 
-.metric-icon-img {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    margin-bottom: 20px;
-}
 
 .metric-value {
     font-size: 6rem;
@@ -161,6 +143,14 @@ body {
     text-transform: uppercase;
     letter-spacing: 2px;
     font-weight: 600;
+}
+
+.metric-pending {
+    font-size: 1.2rem;
+    color: #FF9800;
+    margin-top: 12px;
+    min-height: 1.4em;
+    font-weight: 500;
 }
 
 /* Footer */
@@ -238,10 +228,6 @@ body {
         font-size: 5rem;
     }
 
-    .metric-icon-img {
-        width: 64px;
-        height: 64px;
-    }
 }
 
 @media (max-width: 1200px) {
@@ -303,11 +289,6 @@ body {
 
     .metric-value {
         font-size: 4rem;
-    }
-
-    .metric-icon-img {
-        width: 56px;
-        height: 56px;
     }
 
     .metric-label {

@@ -26,23 +26,20 @@
 
             <!-- Center Column: Visualization -->
             <div class="visualization-column">
-                <div class="icon-display">
-                    <div id="scaling-icon" class="scaling-icon-big">
-                        <img src="{{ url_for('static', filename='images/kubernetes.png') }}" alt="Kubernetes">
-                    </div>
+                <div id="scaling-icon" class="scaling-icon-big">
+                    <img src="{{ url_for('static', filename='images/kubernetes.png') }}" alt="Kubernetes">
                 </div>
             </div>
 
             <!-- Right Column: Metrics -->
             <div class="metrics-column">
                 <div class="metric-card metric-pods">
-                    <img class="metric-icon-img" src="{{ url_for('static', filename='images/pod.png') }}" alt="Pods">
                     <div class="metric-value" id="pod-count">0</div>
                     <div class="metric-label">Pods</div>
+                    <div class="metric-pending" id="pod-pending"></div>
                 </div>
 
                 <div class="metric-card metric-nodes">
-                    <img class="metric-icon-img" src="{{ url_for('static', filename='images/node.png') }}" alt="Nodes">
                     <div class="metric-value" id="node-count">0</div>
                     <div class="metric-label">Nodes</div>
                 </div>

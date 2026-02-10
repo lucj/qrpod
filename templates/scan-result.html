@@ -194,7 +194,7 @@
 </head>
 <body>
     <div class="result-container">
-        <div class="success-icon">🚀</div>
+        <!--<div class="success-icon">🚀</div>-->
 
         <h1>WOW!</h1>
 
@@ -204,6 +204,7 @@
 
         <p class="pod-label">Pod{{ 's' if pod_count != 1 else '' }}</p>
 
+        <!--
         {% if pod_names %}
         <div class="pod-list">
             {% for pod_name in pod_names %}
@@ -211,15 +212,18 @@
             {% endfor %}
         </div>
         {% endif %}
+        -->
 
         <div class="button-group">
-            <a href="/" class="btn btn-primary">View Dashboard</a>
+            <!--<a href="/" class="btn btn-primary">View Dashboard</a>-->
             <a href="/scan?token={{ token }}" class="btn btn-secondary">Create More Pods</a>
         </div>
 
+        <!--
         <p class="info-text">
             Pods are running in the <strong>{{ namespace }}</strong> namespace
         </p>
+        -->
     </div>
 </body>
 </html>
