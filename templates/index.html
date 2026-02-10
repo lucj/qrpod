@@ -28,17 +28,7 @@
             <div class="visualization-column">
                 <div class="icon-display">
                     <div id="scaling-icon" class="scaling-icon-big">
-                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="10" y="10" width="30" height="30" fill="#4CAF50" opacity="0.8"/>
-                            <rect x="45" y="10" width="30" height="30" fill="#2196F3" opacity="0.8"/>
-                            <rect x="80" y="10" width="10" height="30" fill="#FF9800" opacity="0.8"/>
-                            <rect x="10" y="45" width="30" height="30" fill="#9C27B0" opacity="0.8"/>
-                            <rect x="45" y="45" width="30" height="30" fill="#F44336" opacity="0.8"/>
-                            <rect x="80" y="45" width="10" height="30" fill="#00BCD4" opacity="0.8"/>
-                            <rect x="10" y="80" width="30" height="10" fill="#FFEB3B" opacity="0.8"/>
-                            <rect x="45" y="80" width="30" height="10" fill="#795548" opacity="0.8"/>
-                            <rect x="80" y="80" width="10" height="10" fill="#607D8B" opacity="0.8"/>
-                        </svg>
+                        <img src="{{ url_for('static', filename='images/kubernetes.png') }}" alt="Kubernetes">
                     </div>
                 </div>
             </div>
@@ -46,13 +36,13 @@
             <!-- Right Column: Metrics -->
             <div class="metrics-column">
                 <div class="metric-card metric-pods">
-                    <div class="metric-icon">📦</div>
+                    <img class="metric-icon-img" src="{{ url_for('static', filename='images/pod.png') }}" alt="Pods">
                     <div class="metric-value" id="pod-count">0</div>
                     <div class="metric-label">Pods</div>
                 </div>
 
                 <div class="metric-card metric-nodes">
-                    <div class="metric-icon">🖥️</div>
+                    <img class="metric-icon-img" src="{{ url_for('static', filename='images/node.png') }}" alt="Nodes">
                     <div class="metric-value" id="node-count">0</div>
                     <div class="metric-label">Nodes</div>
                 </div>

@@ -1,0 +1,30 @@
+services:
+  qr-app:
+    build: .
+    command: flask run --reload --host=0.0.0.0 --port=5000
+    ports:
+      - "5001:5000"
+    environment:
+      FLASK_APP: app.main:app
+      FLASK_DEBUG: "1"
+      AUTH_TOKEN: ${AUTH_TOKEN:-dev-token}
+      NAMESPACE: ${NAMESPACE:-default}
+      APP_URL: ${APP_URL:-http://localhost:5001}
+      KUBECONFIG: /kubeconfig
+    volumes:
+      - $PWD/kubeconfig
+    develop:
+      watch:
+        - action: sync
+          path: ./templates
+          target: /app/templates
+        - action: sync
+          path: ./app/static
+          target: /app/app/static
+        - action: sync+restart
+          path: ./app
+          target: /app/app
+          ignore:
+            - static/
+        - action: rebuild
+          path: requirements.txt
