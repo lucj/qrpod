@@ -33,19 +33,10 @@ Common labels
 */}}
 {{- define "qr-pods.labels" -}}
 helm.sh/chart: {{ include "qr-pods.chart" . }}
-{{ include "qr-pods.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels
-*/}}
-{{- define "qr-pods.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "qr-pods.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
@@ -56,16 +47,5 @@ Create the name of the service account to use
 {{- default (include "qr-pods.fullname" .) .Values.rbac.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.rbac.serviceAccount.name }}
-{{- end }}
-{{- end }}
-
-{{/*
-Generate auth token if not provided
-*/}}
-{{- define "qr-pods.authToken" -}}
-{{- if .Values.app.authToken }}
-{{- .Values.app.authToken }}
-{{- else }}
-{{- randAlphaNum 32 }}
 {{- end }}
 {{- end }}

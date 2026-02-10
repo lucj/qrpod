@@ -5,11 +5,11 @@ metadata:
   labels:
     {{- include "qr-pods.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
   ports:
-  - port: {{ .Values.service.port }}
-    targetPort: {{ .Values.service.targetPort }}
+  - port: 80
+    targetPort: 5000
     protocol: TCP
     name: http
   selector:
-    {{- include "qr-pods.selectorLabels" . | nindent 4 }}
+    app: qrpods
