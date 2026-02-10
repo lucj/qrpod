@@ -7,9 +7,9 @@ helmDefaults:
 releases:
   - name: qr-pods
     namespace: default
-    chart: ./chart
+    chart: .
     values:
-      - ./chart/values.yaml
+      - values.yaml
     set:
       # Override these values or set them via environment variables
       - name: app.url
@@ -31,17 +31,3 @@ releases:
         value: {{ env "REGISTRY_PASSWORD" | default "" | quote }}
       - name: imagePullSecrets.email
         value: {{ env "REGISTRY_EMAIL" | default "" | quote }}
-
-# Example usage:
-# Basic deployment:
-#   APP_URL=http://1.2.3.4 helmfile sync
-#
-# With custom image:
-#   APP_URL=http://1.2.3.4 IMAGE_REPOSITORY=myregistry/qr-app IMAGE_TAG=v1.0.0 helmfile sync
-#
-# With private GHCR registry:
-#   APP_URL=http://1.2.3.4 \
-#   IMAGE_REPOSITORY=ghcr.io/username/qr-app \
-#   REGISTRY_USERNAME=github_username \
-#   REGISTRY_PASSWORD=ghp_xxxx \
-#   helmfile sync
