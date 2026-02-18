@@ -25,6 +25,7 @@ class KubernetesManager:
                 )
 
         self.v1 = client.CoreV1Api()
+        self.custom = client.CustomObjectsApi()
 
     def create_pods(self, count):
         created_pods = []
@@ -110,6 +111,27 @@ class KubernetesManager:
         except ApiException as e:
             print(f"Error getting node count: {e}")
             return {"total": 0, "not_ready": 0}
+
+
+    def get_nodepool_resources(self):
+        for version in ("v1", "v1beta1"):
+            try:
+                nodepools = self.custom.list_cluster_custom_object(
+                    group="karpenter.sh",
+                    version=version,
+                    plural="nodepools"
+                )
+                resources = {}
+                for np in nodepools.get('items', []):
+                    for key, value in np.get('status', {}).get('resources', {}).items():
+                        resources[key] = value
+                return resources
+            except ApiException:
+                continue
+            except Exception as e:
+                print(f"Error getting nodepool resources: {e}")
+                return {}
+        return {}
 
 
 k8s_manager = KubernetesManager()

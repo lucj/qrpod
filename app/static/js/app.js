@@ -117,10 +117,40 @@ function updateIconScale() {
     }
 }
 
+function formatMemory(value) {
+    if (!value) return '—';
+    const mi = value.match(/^(\d+(?:\.\d+)?)Mi$/);
+    if (mi) {
+        const n = parseFloat(mi[1]);
+        return n >= 1024 ? `${(n / 1024).toFixed(1)} Gi` : `${Math.round(n)} Mi`;
+    }
+    return value;
+}
+
+async function updateNodepoolResources() {
+    try {
+        const response = await fetch('/api/nodepool');
+        if (!response.ok) throw new Error('Failed to fetch nodepool resources');
+        const data = await response.json();
+
+        const cpuEl = document.getElementById('np-cpu');
+        if (cpuEl) cpuEl.textContent = data.cpu || '—';
+
+        const memEl = document.getElementById('np-memory');
+        if (memEl) memEl.textContent = formatMemory(data.memory);
+
+        const podsEl = document.getElementById('np-pods');
+        if (podsEl) podsEl.textContent = data.pods || '—';
+    } catch (error) {
+        console.error('Error updating nodepool resources:', error);
+    }
+}
+
 async function updateMetrics() {
     await Promise.all([
         updatePodCount(),
-        updateNodeCount()
+        updateNodeCount(),
+        updateNodepoolResources()
     ]);
 }
 

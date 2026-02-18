@@ -44,6 +44,12 @@ def node_count():
     return jsonify({'count': counts['total'], 'not_ready': counts['not_ready']})
 
 
+@app.route('/api/nodepool')
+def nodepool():
+    resources = k8s_manager.get_nodepool_resources()
+    return jsonify(resources)
+
+
 @app.route('/health')
 def health():
     return jsonify({'status': 'healthy'}), 200
