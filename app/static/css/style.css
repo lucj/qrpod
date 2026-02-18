@@ -247,6 +247,12 @@ body {
     background: #4CAF50;
     border-radius: 50%;
     animation: pulse-dot 2s ease-in-out infinite;
+    transition: background 0.3s ease;
+}
+
+.status-dot.offline {
+    background: #ef4444;
+    animation: none;
 }
 
 @keyframes pulse-dot {

@@ -67,12 +67,12 @@ class KubernetesManager:
                                 "image": config.POD_IMAGE,
                                 "resources": {
                                     "requests": {
-                                        "cpu": "50m",
-                                        "memory": "32Mi"
+                                        "cpu": "32m",
+                                        "memory": "16Mi"
                                     },
                                     "limits": {
-                                        "cpu": "50m",
-                                        "memory": "32Mi"
+                                        "cpu": "32m",
+                                        "memory": "16Mi"
                                     }
                                 }
                             }
@@ -130,15 +130,16 @@ class KubernetesManager:
                 label_selector="karpenter.sh/registered=true"
             )
 
-            not_ready = [
+            ready = [
                 n for n in nodes.items
-                if not any(
+                if any(
                     condition.type == "Ready" and condition.status == "True"
                     for condition in n.status.conditions
                 )
             ]
+            not_ready = len(nodes.items) - len(ready)
 
-            return {"total": len(nodes.items), "not_ready": len(not_ready)}
+            return {"total": len(ready), "not_ready": not_ready}
         except ApiException as e:
             print(f"Error getting node count: {e}")
             return {"total": 0, "not_ready": 0}

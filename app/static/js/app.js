@@ -52,8 +52,10 @@ async function updatePodCount() {
                 ? `(of which ${newPending} in Pending)`
                 : '';
         }
+        return true;
     } catch (error) {
         console.error('Error updating pod count:', error);
+        return false;
     }
 }
 
@@ -92,8 +94,10 @@ async function updateNodeCount() {
                 ? `(+ ${newNotReady} coming soon)`
                 : '';
         }
+        return true;
     } catch (error) {
         console.error('Error updating node count:', error);
+        return false;
     }
 }
 
@@ -152,17 +156,27 @@ async function updateNodepoolResources() {
 
         const limitMemEl = document.getElementById('np-limit-memory');
         if (limitMemEl) limitMemEl.textContent = limits.memory ? `/${formatMemory(limits.memory)}` : '';
+        return true;
     } catch (error) {
         console.error('Error updating nodepool resources:', error);
+        return false;
     }
 }
 
+function setConnectionStatus(ok) {
+    const dot = document.getElementById('status-dot');
+    const label = document.getElementById('status-label');
+    if (dot) dot.classList.toggle('offline', !ok);
+    if (label) label.textContent = ok ? 'Live Updates Active' : 'Connection Lost';
+}
+
 async function updateMetrics() {
-    await Promise.all([
+    const results = await Promise.all([
         updatePodCount(),
         updateNodeCount(),
         updateNodepoolResources()
     ]);
+    setConnectionStatus(results.every(Boolean));
 }
 
 function startPolling() {
