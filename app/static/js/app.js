@@ -119,10 +119,12 @@ function updateIconScale() {
 
 function formatMemory(value) {
     if (!value) return '—';
+    const ki = value.match(/^(\d+(?:\.\d+)?)Ki$/);
+    if (ki) return `${Math.round(parseFloat(ki[1]) / (1024 * 1024))} Gi`;
     const mi = value.match(/^(\d+(?:\.\d+)?)Mi$/);
     if (mi) {
         const n = parseFloat(mi[1]);
-        return n >= 1024 ? `${(n / 1024).toFixed(1)} Gi` : `${Math.round(n)} Mi`;
+        return n >= 1024 ? `${Math.round(n / 1024)} Gi` : `${Math.round(n)} Mi`;
     }
     return value;
 }
@@ -146,10 +148,10 @@ async function updateNodepoolResources() {
         if (podsEl) podsEl.textContent = capacity.pods || '—';
 
         const limitCpuEl = document.getElementById('np-limit-cpu');
-        if (limitCpuEl) limitCpuEl.textContent = limits.cpu || '—';
+        if (limitCpuEl) limitCpuEl.textContent = limits.cpu ? `/${limits.cpu}` : '';
 
         const limitMemEl = document.getElementById('np-limit-memory');
-        if (limitMemEl) limitMemEl.textContent = formatMemory(limits.memory);
+        if (limitMemEl) limitMemEl.textContent = limits.memory ? `/${formatMemory(limits.memory)}` : '';
     } catch (error) {
         console.error('Error updating nodepool resources:', error);
     }

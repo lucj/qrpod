@@ -50,29 +50,24 @@
 
         <div class="nodepool-bar">
             <div class="nodepool-row">
-                <span class="np-bar-label">Capacity</span>
+                <span class="np-bar-label">Capacity<span class="np-limit">/Limits</span></span>
                 <div class="np-resource">
-                    <span class="np-value" id="np-cpu">—</span>
+                    <div class="np-value-group">
+                        <span class="np-value" id="np-cpu">—</span>
+                        <span class="np-limit" id="np-limit-cpu"></span>
+                    </div>
                     <span class="np-unit">CPU</span>
                 </div>
                 <div class="np-resource">
-                    <span class="np-value" id="np-memory">—</span>
+                    <div class="np-value-group">
+                        <span class="np-value" id="np-memory">—</span>
+                        <span class="np-limit" id="np-limit-memory"></span>
+                    </div>
                     <span class="np-unit">Memory</span>
                 </div>
                 <div class="np-resource">
                     <span class="np-value" id="np-pods">—</span>
                     <span class="np-unit">Pods</span>
-                </div>
-            </div>
-            <div class="nodepool-row">
-                <span class="np-bar-label">Limits</span>
-                <div class="np-resource">
-                    <span class="np-value" id="np-limit-cpu">—</span>
-                    <span class="np-unit">CPU</span>
-                </div>
-                <div class="np-resource">
-                    <span class="np-value" id="np-limit-memory">—</span>
-                    <span class="np-unit">Memory</span>
                 </div>
             </div>
         </div>

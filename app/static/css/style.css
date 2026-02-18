@@ -198,12 +198,19 @@ body {
     padding: 20px 50px;
 }
 
-.nodepool-row + .nodepool-row {
-    border-top: 1px solid #e2e8f0;
+.np-value-group {
+    display: flex;
+    align-items: baseline;
+}
+
+.np-limit {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    font-weight: 500;
 }
 
 .np-bar-label {
-    font-size: 1rem;
+    font-size: 2rem;
     font-weight: 700;
     color: #667eea;
     text-transform: uppercase;
