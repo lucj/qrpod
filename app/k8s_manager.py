@@ -116,10 +116,11 @@ class KubernetesManager:
                 label_selector=f"app={config.POD_LABEL}"
             )
 
-            pending = [p for p in pods.items if p.status.phase == "Pending"]
-            running = [p for p in pods.items if p.status.phase == "Running"]
+            active = [p for p in pods.items if p.status.phase in ("Running", "Pending")]
+            # "pending" = not yet scheduled to a node; ContainerCreating pods already have a node
+            pending = [p for p in active if not p.spec.node_name]
 
-            return {"total": len(running) + len(pending), "pending": len(pending)}
+            return {"total": len(active), "pending": len(pending)}
         except ApiException as e:
             print(f"Error getting pod count: {e}")
             return {"total": 0, "pending": 0}
