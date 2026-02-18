@@ -21,13 +21,12 @@ def index():
 @app.route('/scan')
 @require_token
 def scan():
-    pod_count = random.randint(1, 10)
-
-    created_pods = k8s_manager.create_pods(pod_count)
+    replica_count = random.randint(1, 10)
+    created = k8s_manager.create_deployment(replica_count)
 
     return render_template('scan-result.html',
-                         pod_count=len(created_pods),
-                         pod_names=created_pods,
+                         pod_count=created,
+                         pod_names=[],
                          token=config.AUTH_TOKEN,
                          namespace=config.NAMESPACE)
 

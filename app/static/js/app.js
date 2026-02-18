@@ -49,7 +49,7 @@ async function updatePodCount() {
         const podPendingElement = document.getElementById('pod-pending');
         if (podPendingElement) {
             podPendingElement.textContent = newPending > 0
-                ? `${newPending} pending`
+                ? `(of which ${newPending} in Pending)`
                 : '';
         }
     } catch (error) {
@@ -89,7 +89,7 @@ async function updateNodeCount() {
         const nodeNotReadyElement = document.getElementById('node-not-ready');
         if (nodeNotReadyElement) {
             nodeNotReadyElement.textContent = newNotReady > 0
-                ? `${newNotReady} not ready`
+                ? `(+ ${newNotReady} coming soon)`
                 : '';
         }
     } catch (error) {

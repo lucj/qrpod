@@ -25,60 +25,73 @@ class KubernetesManager:
                 )
 
         self.v1 = client.CoreV1Api()
+        self.apps_v1 = client.AppsV1Api()
         self.custom = client.CustomObjectsApi()
 
-    def create_pods(self, count):
-        created_pods = []
+    def create_deployment(self, count):
         timestamp = int(time.time())
+        deployment_name = f"qr-deployment-{timestamp}-{random.randint(1000, 9999)}"
 
-        for i in range(count):
-            pod_name = f"qr-pod-{timestamp}-{random.randint(1000, 9999)}"
-
-            pod_manifest = {
-                "apiVersion": "v1",
-                "kind": "Pod",
-                "metadata": {
-                    "name": pod_name,
-                    "labels": {
-                        "app": config.POD_LABEL,
-                        "created-by": "qr-scan"
-                    },
-                    "annotations": {
-                        "created-at": str(timestamp)
+        deployment_manifest = {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "name": deployment_name,
+                "labels": {
+                    "app": config.POD_LABEL,
+                    "created-by": "qr-scan"
+                },
+                "annotations": {
+                    "created-at": str(timestamp)
+                }
+            },
+            "spec": {
+                "replicas": count,
+                "selector": {
+                    "matchLabels": {
+                        "deployment": deployment_name
                     }
                 },
-                "spec": {
-                    "containers": [
-                        {
-                            "name": "www",
-                            "image": config.POD_IMAGE,
-                            "resources": {
-                                "requests": {
-                                    "cpu": "50m",
-                                    "memory": "32Mi"
-                                },
-                                "limits": {
-                                    "cpu": "50m",
-                                    "memory": "32Mi"
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "app": config.POD_LABEL,
+                            "deployment": deployment_name,
+                            "created-by": "qr-scan"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "www",
+                                "image": config.POD_IMAGE,
+                                "resources": {
+                                    "requests": {
+                                        "cpu": "50m",
+                                        "memory": "32Mi"
+                                    },
+                                    "limits": {
+                                        "cpu": "50m",
+                                        "memory": "32Mi"
+                                    }
                                 }
                             }
-                        }
-                    ],
-                    "restartPolicy": "Always"
+                        ]
+                    }
                 }
             }
+        }
 
-            try:
-                self.v1.create_namespaced_pod(
-                    namespace=config.NAMESPACE,
-                    body=pod_manifest
-                )
-                created_pods.append(pod_name)
-                print(f"Created pod: {pod_name}")
-            except ApiException as e:
-                print(f"Error creating pod {pod_name}: {e}")
-
-        return created_pods
+        try:
+            self.apps_v1.create_namespaced_deployment(
+                namespace=config.NAMESPACE,
+                body=deployment_manifest
+            )
+            print(f"Created deployment: {deployment_name} with {count} replicas")
+            return count
+        except ApiException as e:
+            print(f"Error creating deployment {deployment_name}: {e}")
+            return 0
 
     def get_pod_count(self):
         try:
