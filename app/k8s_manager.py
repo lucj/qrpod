@@ -121,17 +121,20 @@ class KubernetesManager:
                     version=version,
                     plural="nodepools"
                 )
-                resources = {}
+                capacity = {}
+                limits = {}
                 for np in nodepools.get('items', []):
                     for key, value in np.get('status', {}).get('resources', {}).items():
-                        resources[key] = value
-                return resources
+                        capacity[key] = value
+                    for key, value in np.get('spec', {}).get('limits', {}).items():
+                        limits[key] = value
+                return {"capacity": capacity, "limits": limits}
             except ApiException:
                 continue
             except Exception as e:
                 print(f"Error getting nodepool resources: {e}")
-                return {}
-        return {}
+                return {"capacity": {}, "limits": {}}
+        return {"capacity": {}, "limits": {}}
 
 
 k8s_manager = KubernetesManager()

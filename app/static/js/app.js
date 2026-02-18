@@ -133,14 +133,23 @@ async function updateNodepoolResources() {
         if (!response.ok) throw new Error('Failed to fetch nodepool resources');
         const data = await response.json();
 
+        const capacity = data.capacity || {};
+        const limits = data.limits || {};
+
         const cpuEl = document.getElementById('np-cpu');
-        if (cpuEl) cpuEl.textContent = data.cpu || '—';
+        if (cpuEl) cpuEl.textContent = capacity.cpu || '—';
 
         const memEl = document.getElementById('np-memory');
-        if (memEl) memEl.textContent = formatMemory(data.memory);
+        if (memEl) memEl.textContent = formatMemory(capacity.memory);
 
         const podsEl = document.getElementById('np-pods');
-        if (podsEl) podsEl.textContent = data.pods || '—';
+        if (podsEl) podsEl.textContent = capacity.pods || '—';
+
+        const limitCpuEl = document.getElementById('np-limit-cpu');
+        if (limitCpuEl) limitCpuEl.textContent = limits.cpu || '—';
+
+        const limitMemEl = document.getElementById('np-limit-memory');
+        if (limitMemEl) limitMemEl.textContent = formatMemory(limits.memory);
     } catch (error) {
         console.error('Error updating nodepool resources:', error);
     }

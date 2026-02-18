@@ -18,13 +18,13 @@ body {
     display: flex;
     flex-direction: column;
     padding: 40px;
+    position: relative;
 }
 
 .big-screen-header {
     text-align: center;
     margin-bottom: 40px;
     color: #475569;
-    position: relative;
 }
 
 .big-screen-header h1 {
@@ -42,9 +42,8 @@ body {
 
 .exoscale-logo {
     position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 40px;
+    right: 40px;
     height: 45px;
     width: auto;
 }
@@ -184,15 +183,23 @@ body {
 
 /* NodePool Resources Bar */
 .nodepool-bar {
+    background: white;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.nodepool-row {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 50px;
-    background: white;
-    border-radius: 20px;
     padding: 20px 50px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.nodepool-row + .nodepool-row {
+    border-top: 1px solid #e2e8f0;
 }
 
 .np-bar-label {

@@ -9,10 +9,10 @@
 </head>
 <body>
     <div class="big-screen-container">
+        <img src="{{ url_for('static', filename='images/exoscale_logo.png') }}" class="exoscale-logo" alt="Exoscale">
         <header class="big-screen-header">
             <h1>Scan Me Maybe</h1>
             <p class="subtitle">QR-Driven Pod Scaling with Karpenter on Exoscale</p>
-            <img src="{{ url_for('static', filename='images/exoscale_logo.png') }}" class="exoscale-logo" alt="Exoscale">
         </header>
 
         <div class="main-content">
@@ -49,18 +49,31 @@
         </div>
 
         <div class="nodepool-bar">
-            <span class="np-bar-label">Capacity</span>
-            <div class="np-resource">
-                <span class="np-value" id="np-cpu">—</span>
-                <span class="np-unit">CPU</span>
+            <div class="nodepool-row">
+                <span class="np-bar-label">Capacity</span>
+                <div class="np-resource">
+                    <span class="np-value" id="np-cpu">—</span>
+                    <span class="np-unit">CPU</span>
+                </div>
+                <div class="np-resource">
+                    <span class="np-value" id="np-memory">—</span>
+                    <span class="np-unit">Memory</span>
+                </div>
+                <div class="np-resource">
+                    <span class="np-value" id="np-pods">—</span>
+                    <span class="np-unit">Pods</span>
+                </div>
             </div>
-            <div class="np-resource">
-                <span class="np-value" id="np-memory">—</span>
-                <span class="np-unit">Memory</span>
-            </div>
-            <div class="np-resource">
-                <span class="np-value" id="np-pods">—</span>
-                <span class="np-unit">Pods</span>
+            <div class="nodepool-row">
+                <span class="np-bar-label">Limits</span>
+                <div class="np-resource">
+                    <span class="np-value" id="np-limit-cpu">—</span>
+                    <span class="np-unit">CPU</span>
+                </div>
+                <div class="np-resource">
+                    <span class="np-value" id="np-limit-memory">—</span>
+                    <span class="np-unit">Memory</span>
+                </div>
             </div>
         </div>
 
