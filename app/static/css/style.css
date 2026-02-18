@@ -89,6 +89,7 @@ body {
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    align-self: stretch;
 }
 
 .scaling-icon-big {

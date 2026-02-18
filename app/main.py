@@ -40,8 +40,8 @@ def pod_count():
 
 @app.route('/api/node-count')
 def node_count():
-    count = k8s_manager.get_node_count()
-    return jsonify({'count': count})
+    counts = k8s_manager.get_node_count()
+    return jsonify({'count': counts['total'], 'not_ready': counts['not_ready']})
 
 
 @app.route('/health')

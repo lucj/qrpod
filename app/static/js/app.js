@@ -67,6 +67,7 @@ async function updateNodeCount() {
 
         const data = await response.json();
         const newCount = data.count;
+        const newNotReady = data.not_ready;
 
         if (newCount !== currentNodeCount) {
             currentNodeCount = newCount;
@@ -83,6 +84,13 @@ async function updateNodeCount() {
             }
 
             updateIconScale();
+        }
+
+        const nodeNotReadyElement = document.getElementById('node-not-ready');
+        if (nodeNotReadyElement) {
+            nodeNotReadyElement.textContent = newNotReady > 0
+                ? `${newNotReady} not ready`
+                : '';
         }
     } catch (error) {
         console.error('Error updating node count:', error);

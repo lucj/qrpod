@@ -98,18 +98,18 @@ class KubernetesManager:
         try:
             nodes = self.v1.list_node()
 
-            ready_nodes = [
+            not_ready = [
                 n for n in nodes.items
-                if any(
+                if not any(
                     condition.type == "Ready" and condition.status == "True"
                     for condition in n.status.conditions
                 )
             ]
 
-            return len(ready_nodes)
+            return {"total": len(nodes.items), "not_ready": len(not_ready)}
         except ApiException as e:
             print(f"Error getting node count: {e}")
-            return 0
+            return {"total": 0, "not_ready": 0}
 
 
 k8s_manager = KubernetesManager()
