@@ -76,7 +76,23 @@ class KubernetesManager:
                                     }
                                 }
                             }
-                        ]
+                        ],     
+                        "affinity": {
+                            "nodeAffinity": {
+                                "requiredDuringSchedulingIgnoredDuringExecution": {
+                                    "nodeSelectorTerms": [
+                                        {
+                                            "matchExpressions": [
+                                                {
+                                                    "key": "karpenter.sh/nodepool",
+                                                    "operator": "Exists"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
