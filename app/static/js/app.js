@@ -1,5 +1,7 @@
 let currentPodCount = 0;
 let currentNodeCount = 0;
+let currentMemoryCapacityBytes = 0;
+let currentMemoryLimitBytes = 0;
 let pollingInterval = null;
 
 function initQRCode() {
@@ -43,7 +45,6 @@ async function updatePodCount() {
                 }, 300);
             }
 
-            updateIconScale();
         }
 
         const podPendingElement = document.getElementById('pod-pending');
@@ -85,7 +86,6 @@ async function updateNodeCount() {
                 }, 300);
             }
 
-            updateIconScale();
         }
 
         const nodeNotReadyElement = document.getElementById('node-not-ready');
@@ -101,9 +101,20 @@ async function updateNodeCount() {
     }
 }
 
-const MAX_PODS = 2000;
-const MAX_NODES = 30;
 const MIN_SIZE_PX = 80;
+
+function parseMemoryBytes(value) {
+    if (!value) return 0;
+    const ki = value.match(/^(\d+(?:\.\d+)?)Ki$/);
+    if (ki) return parseFloat(ki[1]) * 1024;
+    const mi = value.match(/^(\d+(?:\.\d+)?)Mi$/);
+    if (mi) return parseFloat(mi[1]) * 1024 ** 2;
+    const gi = value.match(/^(\d+(?:\.\d+)?)Gi$/);
+    if (gi) return parseFloat(gi[1]) * 1024 ** 3;
+    const ti = value.match(/^(\d+(?:\.\d+)?)Ti$/);
+    if (ti) return parseFloat(ti[1]) * 1024 ** 4;
+    return parseFloat(value) || 0;
+}
 
 function updateIconScale() {
     const icon = document.getElementById('scaling-icon');
@@ -111,9 +122,9 @@ function updateIconScale() {
 
     if (icon && column) {
         const maxSize = Math.min(column.clientWidth, column.clientHeight);
-        const podRatio = Math.min(currentPodCount / MAX_PODS, 1);
-        const nodeRatio = Math.min(currentNodeCount / MAX_NODES, 1);
-        const ratio = Math.max(podRatio, nodeRatio);
+        const ratio = currentMemoryLimitBytes > 0
+            ? Math.min(currentMemoryCapacityBytes / currentMemoryLimitBytes, 1)
+            : 0;
         const size = Math.round(MIN_SIZE_PX + (maxSize - MIN_SIZE_PX) * ratio);
 
         icon.style.width  = `${size}px`;
@@ -156,6 +167,10 @@ async function updateNodepoolResources() {
 
         const limitMemEl = document.getElementById('np-limit-memory');
         if (limitMemEl) limitMemEl.textContent = limits.memory ? `/${formatMemory(limits.memory)}` : '';
+
+        currentMemoryCapacityBytes = parseMemoryBytes(capacity.memory);
+        currentMemoryLimitBytes = parseMemoryBytes(limits.memory);
+        updateIconScale();
         return true;
     } catch (error) {
         console.error('Error updating nodepool resources:', error);
