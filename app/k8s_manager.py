@@ -55,11 +55,11 @@ class KubernetesManager:
                             "resources": {
                                 "requests": {
                                     "cpu": "50m",
-                                    "memory": "64Mi"
+                                    "memory": "32Mi"
                                 },
                                 "limits": {
                                     "cpu": "50m",
-                                    "memory": "64Mi"
+                                    "memory": "32Mi"
                                 }
                             }
                         }
@@ -97,7 +97,9 @@ class KubernetesManager:
 
     def get_node_count(self):
         try:
-            nodes = self.v1.list_node()
+            nodes = self.v1.list_node(
+                label_selector="karpenter.sh/registered=true"
+            )
 
             not_ready = [
                 n for n in nodes.items
