@@ -94,6 +94,17 @@ async function updateNodeCount() {
                 ? `(+ ${newNotReady} coming soon)`
                 : '';
         }
+
+        const typeList = document.getElementById('node-type-list');
+        if (typeList) {
+            const instanceTypes = data.instance_types || {};
+            typeList.innerHTML = Object.entries(instanceTypes)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([type, count]) =>
+                    `<div class="node-type-item"><span>${type}</span><span class="node-type-count">${count}</span></div>`
+                )
+                .join('');
+        }
         return true;
     } catch (error) {
         console.error('Error updating node count:', error);

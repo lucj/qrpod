@@ -40,7 +40,7 @@ def pod_count():
 @app.route('/api/node-count')
 def node_count():
     counts = k8s_manager.get_node_count()
-    return jsonify({'count': counts['total'], 'not_ready': counts['not_ready']})
+    return jsonify({'count': counts['total'], 'not_ready': counts['not_ready'], 'instance_types': counts['instance_types']})
 
 
 @app.route('/api/nodepool')

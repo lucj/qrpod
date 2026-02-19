@@ -1,6 +1,7 @@
 import os
 import time
 import random
+from collections import Counter
 from kubernetes import client, config as k8s_config
 from kubernetes.client.rest import ApiException
 from app.config import config
@@ -140,7 +141,12 @@ class KubernetesManager:
             ]
             not_ready = len(nodes.items) - len(ready)
 
-            return {"total": len(ready), "not_ready": not_ready}
+            instance_types = Counter(
+                n.metadata.labels.get("node.kubernetes.io/instance-type", "unknown")
+                for n in nodes.items
+            )
+
+            return {"total": len(ready), "not_ready": not_ready, "instance_types": dict(instance_types)}
         except ApiException as e:
             print(f"Error getting node count: {e}")
             return {"total": 0, "not_ready": 0}

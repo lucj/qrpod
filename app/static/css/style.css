@@ -163,6 +163,32 @@ body {
     font-weight: 500;
 }
 
+.node-type-list {
+    margin-top: 15px;
+    font-size: 0.85rem;
+    color: #64748b;
+    text-align: left;
+    width: 100%;
+}
+
+.node-type-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 2px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.node-type-item:last-child {
+    border-bottom: none;
+}
+
+.node-type-count {
+    font-weight: 600;
+    color: #667eea;
+}
+
 /* Footer */
 .big-screen-footer {
     margin-top: 40px;
