@@ -31,11 +31,12 @@ body {
     font-size: 5rem;
     font-weight: bold;
     margin-bottom: 15px;
-    color: #667eea;
+    /*color: #667eea;*/
+    color: #DA2A1B;
 }
 
 .subtitle {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     font-weight: 300;
     color: #64748b;
 }
@@ -44,7 +45,7 @@ body {
     position: absolute;
     top: 40px;
     right: 40px;
-    height: 45px;
+    height: 70px;
     width: auto;
 }
 
@@ -73,13 +74,14 @@ body {
 
 .qr-card h2 {
     font-size: 2.5rem;
-    color: #667eea;
-    margin-bottom: 30px;
+    /*color: #667eea;*/
+    color: #DA2A1B;
+    margin-bottom: 15px;
 }
 
 .qr-code-display {
     display: inline-block;
-    padding: 30px;
+    padding: 20px;
     background: white;
     border-radius: 20px;
     margin: 20px 0;
@@ -138,7 +140,8 @@ body {
 .metric-value {
     font-size: 6rem;
     font-weight: bold;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);*/
+    background: #DA2A1B;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -149,7 +152,8 @@ body {
 
 .metric-label {
     font-size: 2rem;
-    color: #666;
+    /*color: #666;*/
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 2px;
     font-weight: 600;
@@ -157,7 +161,8 @@ body {
 
 .metric-pending {
     font-size: 1.2rem;
-    color: #FF9800;
+    /*color: #FF9800;*/
+    color: #667eea;
     margin-top: 12px;
     min-height: 1.4em;
     font-weight: 500;
@@ -186,7 +191,8 @@ body {
 
 .node-type-count {
     font-weight: 600;
-    color: #667eea;
+    /*color: #667eea;*/
+    color: #DA2A1B;
 }
 
 /* Footer */
@@ -238,7 +244,8 @@ body {
 .np-bar-label {
     font-size: 2rem;
     font-weight: 700;
-    color: #667eea;
+    /*color: #667eea;*/
+    color: #DA2A1B;
     text-transform: uppercase;
     letter-spacing: 2px;
     padding-right: 30px;
@@ -255,7 +262,8 @@ body {
 .np-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #667eea;
+    /*color: #667eea;*/
+    color: #DA2A1B;
     line-height: 1;
 }
 

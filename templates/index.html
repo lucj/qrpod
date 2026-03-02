@@ -12,14 +12,14 @@
         <img src="{{ url_for('static', filename='images/exoscale_logo.png') }}" class="exoscale-logo" alt="Exoscale">
         <header class="big-screen-header">
             <h1>Scan Me Maybe</h1>
-            <p class="subtitle">QR-Driven Pod Scaling with Karpenter on Exoscale</p>
+            <p class="subtitle">Using Karpenter to Scale my Pods</p>
         </header>
 
         <div class="main-content">
             <!-- Left Column: QR Code -->
             <div class="qr-column">
                 <div class="qr-card">
-                    <h2>Scan to Create Pods</h2>
+                    <h2>Create Pods</h2>
                     <div id="qrcode" class="qr-code-display"></div>
                     <!--<p class="qr-instructions">Scan with your phone to create 1-10 random pods</p>-->
                 </div>
@@ -73,12 +73,13 @@
             </div>
         </div>
 
-        <footer class="big-screen-footer">
+        <!--<footer class="big-screen-footer">
             <div class="status-indicator">
                 <span class="status-dot" id="status-dot"></span>
                 <span id="status-label">Live Updates Active</span>
             </div>
         </footer>
+        //-->
     </div>
 
     <script>

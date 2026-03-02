@@ -12,7 +12,9 @@ function initQRCode() {
             text: SCAN_URL,
             width: 300,
             height: 300,
-            colorDark: '#667eea',
+            //colorDark: '#667eea',
+            //colorDark: '#DA2A1B',
+            colorDark: '#64748b',
             colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.H
         });
@@ -50,7 +52,7 @@ async function updatePodCount() {
         const podPendingElement = document.getElementById('pod-pending');
         if (podPendingElement) {
             podPendingElement.textContent = newPending > 0
-                ? `(of which ${newPending} in Pending)`
+                ? `(${newPending} in Pending)`
                 : '';
         }
         return true;
