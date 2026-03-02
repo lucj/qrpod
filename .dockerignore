@@ -15,5 +15,6 @@ build
 .venv
 venv
 chart
+infra
 README.md
 .DS_Store

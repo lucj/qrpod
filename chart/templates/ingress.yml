@@ -1,0 +1,21 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: qrpods
+spec:
+  entryPoints:
+  {{- if .Values.app.tls }}
+    - websecure
+  {{- else }}
+    - web
+  {{- end }}
+  routes:
+  - match: Host(`{{ .Values.app.url }}`)
+    kind: Rule
+    services:
+    - name: qrpods
+      port: 80
+  {{- if .Values.app.tls }}
+  tls:
+    secretName: qrpods-certs
+  {{- end }}

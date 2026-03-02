@@ -1,0 +1,4 @@
+# cert-manager configuration for test cluster
+
+crds:
+  enabled: true

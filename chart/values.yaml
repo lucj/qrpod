@@ -1,10 +1,10 @@
 # Application configuration
 app:
   # The public URL of your application (update after deployment)
-  url: "http://localhost:5000"
+  url: ""
 
   # Authentication token
-  authToken: "1234567890"
+  authToken: ""
 
   # Kubernetes namespace for pod creation
   namespace: default
@@ -12,10 +12,13 @@ app:
   # Number of app replica
   replicas: 1
 
+  # TLS
+  tls: true
+
 # Image configuration
 image:
   repository: ghcr.io/lucj/qrpod
-  tag: v1.0.1
+  tag: v1.0.2
   pullPolicy: IfNotPresent
 
 # Registry access
@@ -28,11 +31,11 @@ registry:
 # App resources
 resources:
   requests:
-    cpu: 250m
-    memory: 256Mi
+    cpu: 500m
+    memory: 1Gi
   limits:
     cpu: 500m
-    memory: 512Mi
+    memory: 1Gi
 
 # RBAC configuration
 rbac:

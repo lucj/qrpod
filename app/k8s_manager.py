@@ -1,10 +1,14 @@
 import os
+import json
 import time
 import random
+import threading
 from collections import Counter
 from kubernetes import client, config as k8s_config
 from kubernetes.client.rest import ApiException
 from app.config import config
+
+CACHE_TTL = 5  # seconds between Kubernetes API polls
 
 
 class KubernetesManager:
@@ -28,6 +32,125 @@ class KubernetesManager:
         self.v1 = client.CoreV1Api()
         self.apps_v1 = client.AppsV1Api()
         self.custom = client.CustomObjectsApi()
+
+        self._cache = {
+            "pod_count":          {"total": 0, "pending": 0},
+            "node_count":         {"total": 0, "not_ready": 0, "instance_types": {}},
+            "nodepool_resources": {"capacity": {}, "limits": {}},
+        }
+        self._lock = threading.Lock()
+
+        t = threading.Thread(target=self._poll_loop, daemon=True)
+        t.start()
+
+    # ------------------------------------------------------------------
+    # Background polling loop
+    # ------------------------------------------------------------------
+
+    def _poll_loop(self):
+        while True:
+            try:
+                self._refresh_pod_count()
+                self._refresh_node_count()
+                self._refresh_nodepool_resources()
+            except Exception as e:
+                print(f"Unexpected error in poll loop: {e}")
+            time.sleep(CACHE_TTL)
+
+    def _refresh_pod_count(self):
+        try:
+            raw = self.v1.list_namespaced_pod(
+                namespace=config.NAMESPACE,
+                label_selector=f"app={config.POD_LABEL}",
+                _preload_content=False
+            )
+            items = json.loads(raw.data).get("items", [])
+            total = 0
+            pending = 0
+            for item in items:
+                phase = item.get("status", {}).get("phase", "")
+                if phase in ("Running", "Pending"):
+                    total += 1
+                    if not item.get("spec", {}).get("nodeName"):
+                        pending += 1
+            result = {"total": total, "pending": pending}
+        except ApiException as e:
+            print(f"Error refreshing pod count: {e}")
+            return
+        with self._lock:
+            self._cache["pod_count"] = result
+
+    def _refresh_node_count(self):
+        try:
+            raw = self.v1.list_node(
+                label_selector="karpenter.sh/registered=true",
+                _preload_content=False
+            )
+            items = json.loads(raw.data).get("items", [])
+            total = len(items)
+            ready = 0
+            instance_types = Counter()
+            for item in items:
+                conditions = item.get("status", {}).get("conditions", [])
+                if any(c.get("type") == "Ready" and c.get("status") == "True" for c in conditions):
+                    ready += 1
+                itype = item.get("metadata", {}).get("labels", {}).get(
+                    "node.kubernetes.io/instance-type", "unknown"
+                )
+                instance_types[itype] += 1
+            result = {
+                "total": ready,
+                "not_ready": total - ready,
+                "instance_types": dict(instance_types),
+            }
+        except ApiException as e:
+            print(f"Error refreshing node count: {e}")
+            return
+        with self._lock:
+            self._cache["node_count"] = result
+
+    def _refresh_nodepool_resources(self):
+        for version in ("v1", "v1beta1"):
+            try:
+                nodepools = self.custom.list_cluster_custom_object(
+                    group="karpenter.sh",
+                    version=version,
+                    plural="nodepools"
+                )
+                capacity = {}
+                limits = {}
+                for np in nodepools.get('items', []):
+                    for key, value in np.get('status', {}).get('resources', {}).items():
+                        capacity[key] = value
+                    for key, value in np.get('spec', {}).get('limits', {}).items():
+                        limits[key] = value
+                result = {"capacity": capacity, "limits": limits}
+            except ApiException:
+                continue
+            except Exception as e:
+                print(f"Error refreshing nodepool resources: {e}")
+                return
+            with self._lock:
+                self._cache["nodepool_resources"] = result
+            return
+
+    # ------------------------------------------------------------------
+    # Public API — return cached data instantly
+    # ------------------------------------------------------------------
+
+    def get_pod_count(self):
+        with self._lock:
+            return dict(self._cache["pod_count"])
+
+    def get_node_count(self):
+        with self._lock:
+            return dict(self._cache["node_count"])
+
+    def get_nodepool_resources(self):
+        with self._lock:
+            return dict(self._cache["nodepool_resources"])
+
+    # ------------------------------------------------------------------
 
     def create_deployment(self, count):
         timestamp = int(time.time())
@@ -77,7 +200,7 @@ class KubernetesManager:
                                     }
                                 }
                             }
-                        ],     
+                        ],
                         "affinity": {
                             "nodeAffinity": {
                                 "requiredDuringSchedulingIgnoredDuringExecution": {
@@ -109,71 +232,6 @@ class KubernetesManager:
         except ApiException as e:
             print(f"Error creating deployment {deployment_name}: {e}")
             return 0
-
-    def get_pod_count(self):
-        try:
-            pods = self.v1.list_namespaced_pod(
-                namespace=config.NAMESPACE,
-                label_selector=f"app={config.POD_LABEL}"
-            )
-
-            active = [p for p in pods.items if p.status.phase in ("Running", "Pending")]
-            # "pending" = not yet scheduled to a node; ContainerCreating pods already have a node
-            pending = [p for p in active if not p.spec.node_name]
-
-            return {"total": len(active), "pending": len(pending)}
-        except ApiException as e:
-            print(f"Error getting pod count: {e}")
-            return {"total": 0, "pending": 0}
-
-    def get_node_count(self):
-        try:
-            nodes = self.v1.list_node(
-                label_selector="karpenter.sh/registered=true"
-            )
-
-            ready = [
-                n for n in nodes.items
-                if any(
-                    condition.type == "Ready" and condition.status == "True"
-                    for condition in n.status.conditions
-                )
-            ]
-            not_ready = len(nodes.items) - len(ready)
-
-            instance_types = Counter(
-                n.metadata.labels.get("node.kubernetes.io/instance-type", "unknown")
-                for n in nodes.items
-            )
-
-            return {"total": len(ready), "not_ready": not_ready, "instance_types": dict(instance_types)}
-        except ApiException as e:
-            print(f"Error getting node count: {e}")
-            return {"total": 0, "not_ready": 0}
-
-
-    def get_nodepool_resources(self):
-        for version in ("v1", "v1beta1"):
-            try:
-                nodepools = self.custom.list_cluster_custom_object(
-                    group="karpenter.sh",
-                    version=version,
-                    plural="nodepools"
-                )
-                capacity = {}
-                limits = {}
-                for np in nodepools.get('items', []):
-                    for key, value in np.get('status', {}).get('resources', {}).items():
-                        capacity[key] = value
-                    for key, value in np.get('spec', {}).get('limits', {}).items():
-                        limits[key] = value
-                return {"capacity": capacity, "limits": limits}
-            except ApiException:
-                continue
-            except Exception as e:
-                print(f"Error getting nodepool resources: {e}")
-                return {"capacity": {}, "limits": {}}
-        return {"capacity": {}, "limits": {}}
 
 
 k8s_manager = KubernetesManager()

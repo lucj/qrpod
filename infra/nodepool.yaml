@@ -1,0 +1,38 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: mixed
+spec:
+  template:
+    metadata:
+      labels:
+        nodepool: standard
+    spec:
+      nodeClassRef:
+        group: karpenter.exoscale.com
+        kind: ExoscaleNodeClass
+        name: standard
+      requirements:
+        - key: "node.kubernetes.io/instance-type"
+          operator: In
+          values:
+            - "standard.small"
+            - "standard.medium"
+            - "standard.large"
+            - "standard.extra-large"
+            - "standard.huge"
+            - "standard.mega"
+            - "memory.extra-large"
+            - "memory.huge"
+            - "cpu.extra-large"
+            - "cpu.huge"
+      expireAfter: 24h
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 3m
+    budgets:
+    - nodes: "50%"
+  weight: 50
+  limits:
+    cpu: 200
+    memory: 384Gi

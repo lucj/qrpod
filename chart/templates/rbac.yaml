@@ -2,16 +2,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "qr-pods.serviceAccountName" . }}
-  labels:
-    {{- include "qr-pods.labels" . | nindent 4 }}
+  name: qrpods
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "qr-pods.fullname" . }}
-  labels:
-    {{- include "qr-pods.labels" . | nindent 4 }}
+  name: qrpods-pod-reader
 rules:
 - apiGroups: [""]
   resources: ["pods"]
@@ -23,24 +19,20 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "qr-pods.fullname" . }}
-  labels:
-    {{- include "qr-pods.labels" . | nindent 4 }}
+  name: qrpods
 subjects:
 - kind: ServiceAccount
-  name: {{ include "qr-pods.serviceAccountName" . }}
+  name: qrpods
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
-  name: {{ include "qr-pods.fullname" . }}
+  name: qrpods-pod-reader
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "qr-pods.fullname" . }}-node-reader
-  labels:
-    {{- include "qr-pods.labels" . | nindent 4 }}
+  name: qrpods-node-reader
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
@@ -52,15 +44,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "qr-pods.fullname" . }}-node-reader
-  labels:
-    {{- include "qr-pods.labels" . | nindent 4 }}
+  name: qrpods-node-reader
 subjects:
 - kind: ServiceAccount
-  name: {{ include "qr-pods.serviceAccountName" . }}
+  name: qrpods
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: {{ include "qr-pods.fullname" . }}-node-reader
+  name: qrpods-node-reader
   apiGroup: rbac.authorization.k8s.io
 {{- end }}

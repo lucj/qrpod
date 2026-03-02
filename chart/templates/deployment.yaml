@@ -1,24 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "qr-pods.fullname" . }}
-  labels:
-    {{- include "qr-pods.labels" . | nindent 4 }}
+  name: qrpods
 spec:
   replicas: {{ .Values.app.replicas }}
   selector:
     matchLabels:
-      app: qrpods
+      app: qrpods-ui
   template:
     metadata:
       labels:
-        app: qrpods
+        app: qrpods-ui
     spec:
-      serviceAccountName: {{ include "qr-pods.serviceAccountName" . }}
+      serviceAccountName: qrpods
       imagePullSecrets:
       - name: registry
       containers:
-      - name: qr-app
+      - name: qrpods
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
@@ -28,12 +26,12 @@ spec:
         - name: AUTH_TOKEN
           valueFrom:
             secretKeyRef:
-              name: {{ include "qr-pods.fullname" . }}
+              name: qrpods
               key: auth-token
         - name: NAMESPACE
           value: {{ .Values.app.namespace | quote }}
         - name: APP_URL
-          value: {{ .Values.app.url | quote }}
+          value: "{{ if .Values.app.tls }}https{{ else }}http{{ end }}://{{ .Values.app.url }}"
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:
@@ -53,5 +51,5 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: karpenter.sh/registered=true
+              - key: karpenter.sh/nodepool
                 operator: DoesNotExist
