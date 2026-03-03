@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: qrpods
+    created-by: manual
+  name: deploy-memory
+spec:
+  selector:
+    matchLabels:
+      deployment: deploy-memory
+  template:
+    metadata:
+      labels:
+        app: qrpods
+        created-by: manual
+        deployment: deploy-memory
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: karpenter.sh/nodepool
+                operator: Exists
+      containers:
+      - image: nginx:alpine
+        imagePullPolicy: IfNotPresent
+        name: www
+        resources:
+          limits:
+            cpu: 100m
+            memory: 20Gi
+          requests:
+            cpu: 100m
+            memory: 20Gi
+
