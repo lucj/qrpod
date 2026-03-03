@@ -22,10 +22,15 @@ spec:
             - "standard.extra-large"
             - "standard.huge"
             - "standard.mega"
+            - "standard.titan"
             - "memory.extra-large"
             - "memory.huge"
+            - "memory.mega"
+            - "memory.titan"
             - "cpu.extra-large"
             - "cpu.huge"
+            - "cpu.mega"
+            - "cpu.titan"
       expireAfter: 24h
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
