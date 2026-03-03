@@ -23,11 +23,21 @@ spec:
         - containerPort: 5000
           name: http
         env:
-        - name: AUTH_TOKEN
+        - name: SCAN_TOKEN
           valueFrom:
             secretKeyRef:
               name: qrpods
-              key: auth-token
+              key: scan-token
+        - name: DASHBOARD_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qrpods
+              key: dashboard-password
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: qrpods
+              key: secret-key
         - name: NAMESPACE
           value: {{ .Values.app.namespace | quote }}
         - name: APP_URL

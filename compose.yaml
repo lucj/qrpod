@@ -7,7 +7,9 @@ services:
     environment:
       FLASK_APP: app.main:app
       FLASK_DEBUG: "1"
-      AUTH_TOKEN: ${AUTH_TOKEN:-dev-token}
+      SCAN_TOKEN: ${SCAN_TOKEN:-SCANMEPODS}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-QRPODSEXODASH}
+      SECRET_KEY: ${SECRET_KEY:-QRPODSSECRETPASS}
       NAMESPACE: ${NAMESPACE:-default}
       APP_URL: ${APP_URL:-http://localhost:5001}
       KUBECONFIG: /kubeconfig

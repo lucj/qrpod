@@ -49,7 +49,9 @@ releases:
       - ../chart/values.yaml
       - app:
           url: "qrpods.exoscale.dev"
-          authToken: "1234567890"
+          scanToken: {{ requiredEnv "SCAN_TOKEN" }}
+          dashboardPassword: {{ requiredEnv "DASHBOARD_PASSWORD" }}
+          secretKey: {{ requiredEnv "SECRET_KEY" }}
         registry:
           user: {{ requiredEnv "QRPOD_REGISTRY_USER" }}
           pass: {{ requiredEnv "QRPOD_REGISTRY_PASS" }}

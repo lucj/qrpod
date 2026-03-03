@@ -1,7 +1,7 @@
 import random
-from flask import Flask, render_template, jsonify, request, redirect, url_for
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from app.config import config
-from app.auth import require_token
+from app.auth import require_token, require_session
 from app.k8s_manager import k8s_manager
 
 app = Flask(__name__,
@@ -9,13 +9,31 @@ app = Flask(__name__,
             static_folder='static',
             static_url_path='/static')
 
+app.secret_key = config.SECRET_KEY
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form.get('token') == config.DASHBOARD_PASSWORD:
+            session['authenticated'] = True
+            return redirect(url_for('index'))
+        error = 'Invalid token'
+    return render_template('login.html', error=error)
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
 
 @app.route('/')
+@require_session
 def index():
-    scan_url = f"{config.APP_URL}/scan?token={config.AUTH_TOKEN}"
-    return render_template('index.html',
-                         scan_url=scan_url,
-                         auth_token=config.AUTH_TOKEN)
+    scan_url = f"{config.APP_URL}/scan?token={config.SCAN_TOKEN}"
+    return render_template('index.html', scan_url=scan_url)
 
 
 @app.route('/scan')
@@ -27,7 +45,7 @@ def scan():
     return render_template('scan-result.html',
                          pod_count=created,
                          pod_names=[],
-                         token=config.AUTH_TOKEN,
+                         token=config.SCAN_TOKEN,
                          namespace=config.NAMESPACE)
 
 
@@ -56,7 +74,7 @@ def health():
 
 if __name__ == '__main__':
     print(f"Starting QR Pods application...")
-    print(f"Auth Token: {config.AUTH_TOKEN}")
+    print(f"Scan Token: {config.SCAN_TOKEN}")
     print(f"Namespace: {config.NAMESPACE}")
     print(f"App URL: {config.APP_URL}")
     app.run(host='0.0.0.0', port=5000, debug=False)

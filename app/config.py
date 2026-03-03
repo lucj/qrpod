@@ -6,7 +6,9 @@ load_dotenv()
 
 
 class Config:
-    AUTH_TOKEN = os.environ.get('AUTH_TOKEN') or secrets.token_urlsafe(32)
+    SCAN_TOKEN = os.environ.get('SCAN_TOKEN') or secrets.token_urlsafe(32)
+    DASHBOARD_PASSWORD = os.environ.get('DASHBOARD_PASSWORD') or secrets.token_urlsafe(32)
+    SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_urlsafe(32)
     NAMESPACE = os.environ.get('NAMESPACE', 'default')
     APP_URL = os.environ.get('APP_URL', 'http://localhost:5000')
     POD_LABEL = 'qrpods'
