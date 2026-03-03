@@ -5,6 +5,12 @@ app:
   replicas: 1
   tls: true
 
+# TTL-based cleanup of qr-scan deployments
+ttlCleanup:
+  enabled: true
+  schedule: "*/1 * * * *"
+  ttlSeconds: 360
+
 # Image configuration
 image:
   registry: ghcr.io

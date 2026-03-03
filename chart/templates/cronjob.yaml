@@ -1,0 +1,37 @@
+{{- if .Values.ttlCleanup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: qrpods-ttl-cleanup
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ .Values.ttlCleanup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: qrpods
+          restartPolicy: OnFailure
+          containers:
+          - name: cleanup
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              NOW=$(date +%s)
+              TTL={{ .Values.ttlCleanup.ttlSeconds }}
+              kubectl get deployments -n {{ .Release.Namespace }} \
+                -l created-by=qr-scan \
+                -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.annotations.created-at}{"\n"}{end}' | \
+              while read NAME CREATED_AT; do
+                if [ -n "$NAME" ] && [ -n "$CREATED_AT" ]; then
+                  AGE=$((NOW - CREATED_AT))
+                  if [ "$AGE" -gt "$TTL" ]; then
+                    echo "Deleting $NAME (age: ${AGE}s, ttl: ${TTL}s)"
+                    kubectl delete deployment "$NAME" -n {{ .Release.Namespace }}
+                  fi
+                fi
+              done
+{{- end }}
