@@ -46,9 +46,8 @@ releases:
     - traefik/traefik
     - cert-manager/cert-manager
     values:
-      - ../chart/values.yaml
+      - values-qrpods.yaml
       - app:
-          url: "qrpods.exoscale.dev"
           scanToken: {{ requiredEnv "SCAN_TOKEN" }}
           dashboardPassword: {{ requiredEnv "DASHBOARD_PASSWORD" }}
           secretKey: {{ requiredEnv "SECRET_KEY" }}

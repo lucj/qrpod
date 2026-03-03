@@ -4,4 +4,4 @@ metadata:
   name: registry
 type: kubernetes.io/dockerconfigjson
 data:
-  .dockerconfigjson: {{ printf "{\"auths\":{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"email\":\"%s\",\"auth\":\"%s\"}}}" .Values.registry.url .Values.registry.user .Values.registry.pass .Values.registry.email (printf "%s:%s" .Values.registry.user .Values.registry.pass | b64enc) | b64enc }}
+  .dockerconfigjson: {{ printf "{\"auths\":{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"email\":\"%s\",\"auth\":\"%s\"}}}" .Values.image.registry .Values.registry.user .Values.registry.pass .Values.registry.email (printf "%s:%s" .Values.registry.user .Values.registry.pass | b64enc) | b64enc }}

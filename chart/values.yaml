@@ -1,38 +1,16 @@
 # Application configuration
 app:
-  # The public URL of your application (update after deployment)
   url: ""
-
-  # Token embedded in the QR code URL (for /scan)
-  scanToken: ""
-
-  # Password to log in to the dashboard
-  dashboardPassword: ""
-
-  # Flask session secret key
-  secretKey: ""
-
-  # Kubernetes namespace for pod creation
   namespace: default
-
-  # Number of app replica
   replicas: 1
-
-  # TLS
   tls: true
 
 # Image configuration
 image:
-  repository: ghcr.io/lucj/qrpod
-  tag: v1.0.3
+  registry: ghcr.io
+  repository: lucj/qrpod
+  tag: v1.0.4
   pullPolicy: IfNotPresent
-
-# Registry access
-registry:
-  url: ghcr.io
-  user: ""
-  pass: ""
-  email: ""
 
 # App resources
 resources:
@@ -42,20 +20,3 @@ resources:
   limits:
     cpu: 500m
     memory: 1Gi
-
-# RBAC configuration
-rbac:
-  create: true
-  serviceAccount:
-    name: qr-app-sa
-
-# Pod configuration for created demo pods
-demoPods:
-  image: nginx:alpine
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi

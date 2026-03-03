@@ -1,0 +1,22 @@
+# Application configuration
+app:
+  url: "qrpods.exoscale.dev"
+  namespace: default
+  replicas: 1
+  tls: true
+
+# Image configuration
+image:
+  registry: ghcr.io
+  repository: lucj/qrpod
+  tag: v1.0.4
+  pullPolicy: IfNotPresent
+
+# App resources
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 500m
+    memory: 1Gi

@@ -34,5 +34,5 @@ spec:
     - nodes: "50%"
   weight: 50
   limits:
-    cpu: 200
-    memory: 384Gi
+    cpu: 150
+    memory: 300Gi

@@ -27,25 +27,3 @@ Create chart name and version as used by the chart label.
 {{- define "qr-pods.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
-
-{{/*
-Common labels
-*/}}
-{{- define "qr-pods.labels" -}}
-helm.sh/chart: {{ include "qr-pods.chart" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "qr-pods.serviceAccountName" -}}
-{{- if .Values.rbac.create }}
-{{- default (include "qr-pods.fullname" .) .Values.rbac.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.rbac.serviceAccount.name }}
-{{- end }}
-{{- end }}
