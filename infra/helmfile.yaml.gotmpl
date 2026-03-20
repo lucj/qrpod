@@ -41,6 +41,8 @@ releases:
 
   - name: qrpods
     namespace: default
+    labels:
+      app: qrpods
     chart: ../chart
     needs:
     - traefik/traefik
