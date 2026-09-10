@@ -63,12 +63,12 @@ roleRef:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: cattle-credentials-fff661cf15
+  name: cattle-credentials-98fe0f6ad0
   namespace: cattle-system
 type: Opaque
 data:
   url: "aHR0cHM6Ly84NS4yMTcuMTYwLjIwNA=="
-  token: "ODVtem5jc2J2d3NyczdwanE2dGhuaGhjazRrNmx6Y2pyZmw4ZnZjaGdudHA1bHNrc2prYnE5"
+  token: "Yzd0dHZ6dGhjZm5jdmh4OHY4MjdqbnZuMjZ3NG01djh2cHd2NnNjbDhoeHcyeGdkcXN3Zmdt"
   namespace: ""
 
 ---
@@ -136,8 +136,10 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: karpenter.sh/nodepool
-                operator: DoesNotExist
+              - key: kubernetes.io/os
+                operator: NotIn
+                values:
+                - windows
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
           - podAffinityTerm:
@@ -173,7 +175,7 @@ spec:
           - name: CATTLE_CLUSTER_REGISTRY
             value: ""
           - name: CATTLE_CREDENTIAL_NAME
-            value: cattle-credentials-fff661cf15
+            value: cattle-credentials-98fe0f6ad0
           - name: CATTLE_SUC_APP_NAME_OVERRIDE
             value: ""
           - name: CATTLE_SERVER_VERSION
@@ -192,7 +194,7 @@ spec:
       volumes:
       - name: cattle-credentials
         secret:
-          secretName: cattle-credentials-fff661cf15
+          secretName: cattle-credentials-98fe0f6ad0
           defaultMode: 320
   strategy:
     type: RollingUpdate

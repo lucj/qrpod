@@ -6,4 +6,4 @@ spec:
   imageTemplateSelector:
     version: "1.35.0"
   securityGroups:
-    - "1aa1a0f5-9c11-4f2c-be8f-0a56480e0232"
+    - "d2b3d077-fe05-4360-97f0-23c411833a22"
