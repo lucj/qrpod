@@ -73,6 +73,7 @@ async function updateNodeCount() {
         const data = await response.json();
         const newCount = data.count;
         const newNotReady = data.not_ready;
+        const newLaunching = data.launching;
 
         if (newCount !== currentNodeCount) {
             currentNodeCount = newCount;
@@ -92,9 +93,16 @@ async function updateNodeCount() {
 
         const nodeNotReadyElement = document.getElementById('node-not-ready');
         if (nodeNotReadyElement) {
-            nodeNotReadyElement.textContent = newNotReady > 0
-                ? `(+ ${newNotReady} coming soon)`
-                : '';
+            // "launching" fires the instant Karpenter creates a NodeClaim,
+            // well before the instance boots and joins as a Node — show that
+            // first so a scale-up reads as instantaneous on screen.
+            if (newLaunching > 0) {
+                nodeNotReadyElement.textContent = `(🚀 ${newLaunching} launching)`;
+            } else if (newNotReady > 0) {
+                nodeNotReadyElement.textContent = `(+ ${newNotReady} coming soon)`;
+            } else {
+                nodeNotReadyElement.textContent = '';
+            }
         }
 
         const typeList = document.getElementById('node-type-list');
@@ -211,8 +219,8 @@ function startPolling() {
     // Initial update
     updateMetrics();
 
-    // Poll every 3 seconds
-    pollingInterval = setInterval(updateMetrics, 3000);
+    // Poll every 1.5 seconds
+    pollingInterval = setInterval(updateMetrics, 1500);
 }
 
 function stopPolling() {

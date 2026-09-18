@@ -8,7 +8,7 @@ from kubernetes import client, config as k8s_config
 from kubernetes.client.rest import ApiException
 from config import config
 
-CACHE_TTL = 5  # seconds between Kubernetes API polls
+CACHE_TTL = 2  # seconds between Kubernetes API polls
 
 
 class KubernetesManager:
@@ -35,7 +35,7 @@ class KubernetesManager:
 
         self._cache = {
             "pod_count":          {"total": 0, "pending": 0},
-            "node_count":         {"total": 0, "not_ready": 0, "instance_types": {}},
+            "node_count":         {"total": 0, "not_ready": 0, "launching": 0, "instance_types": {}},
             "nodepool_resources": {"capacity": {}, "limits": {}},
         }
         self._lock = threading.Lock()
@@ -52,6 +52,7 @@ class KubernetesManager:
             try:
                 self._refresh_pod_count()
                 self._refresh_node_count()
+                self._refresh_launching_count()
                 self._refresh_nodepool_resources()
             except Exception as e:
                 print(f"Unexpected error in poll loop: {e}")
@@ -82,8 +83,13 @@ class KubernetesManager:
 
     def _refresh_node_count(self):
         try:
+            # "karpenter.sh/nodepool" is set by kubelet at boot time (from the
+            # NodePool's user-data), so it's visible as soon as the Node object
+            # registers with the API server. "karpenter.sh/registered=true" is
+            # only added later, once Karpenter's own controller reconciles the
+            # node — waiting for that adds a very noticeable, avoidable delay.
             raw = self.v1.list_node(
-                label_selector="karpenter.sh/registered=true",
+                label_selector="karpenter.sh/nodepool",
                 _preload_content=False
             )
             items = json.loads(raw.data).get("items", [])
@@ -107,7 +113,32 @@ class KubernetesManager:
             print(f"Error refreshing node count: {e}")
             return
         with self._lock:
-            self._cache["node_count"] = result
+            self._cache["node_count"].update(result)
+
+    def _refresh_launching_count(self):
+        # NodeClaims appear the instant Karpenter decides to scale up — well
+        # before the underlying instance boots and joins as a Node — so this
+        # is the earliest possible signal that a scale-up was triggered.
+        for version in ("v1", "v1beta1"):
+            try:
+                nodeclaims = self.custom.list_cluster_custom_object(
+                    group="karpenter.sh",
+                    version=version,
+                    plural="nodeclaims"
+                )
+            except ApiException:
+                continue
+            except Exception as e:
+                print(f"Error refreshing launching count: {e}")
+                return
+            launching = 0
+            for nc in nodeclaims.get("items", []):
+                conditions = nc.get("status", {}).get("conditions", [])
+                if not any(c.get("type") == "Ready" and c.get("status") == "True" for c in conditions):
+                    launching += 1
+            with self._lock:
+                self._cache["node_count"]["launching"] = launching
+            return
 
     def _refresh_nodepool_resources(self):
         for version in ("v1", "v1beta1"):

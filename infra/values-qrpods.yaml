@@ -15,7 +15,7 @@ ttlCleanup:
 image:
   registry: ghcr.io
   repository: lucj/qrpod
-  tag: v1.0.6
+  tag: v1.0.7
   pullPolicy: IfNotPresent
 
 # App resources

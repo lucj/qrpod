@@ -37,7 +37,7 @@ rules:
   resources: ["nodes"]
   verbs: ["list", "get"]
 - apiGroups: ["karpenter.sh"]
-  resources: ["nodepools"]
+  resources: ["nodepools", "nodeclaims"]
   verbs: ["list", "get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
