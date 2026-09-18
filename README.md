@@ -18,7 +18,77 @@ A demo application for Kubernetes that displays a QR code on a big screen. When 
   - `/` - Big screen display with QR code and live metrics
   - `/scan?token=X` - Mobile result page after scanning
 
-## Quick Start
+## Setup
+
+- Create an SKS cluster with a default nodepool
+
+- Get the kubeconfig and copy it in ./kubeconfig
+
+- Get the ID of the security group (example: fd0bd62c-eb19-45e3-b528-2ed5c8d3050a)
+
+- Copy this ID in the ./infra/nodeclass.yaml specification
+
+```yaml
+apiVersion: karpenter.exoscale.com/v1
+kind: ExoscaleNodeClass
+metadata:
+  name: standard
+spec:
+  imageTemplateSelector:
+    version: "1.35.0"
+  securityGroups:
+    - "fd0bd62c-eb19-45e3-b528-2ed5c8d3050a" # <-- Use the SG retrieved above
+```
+
+- create the nodeclass resource
+
+```bash
+k apply -f ./infra/nodeclass.yaml
+```
+
+- create the Karpenter NodePool
+
+```bash
+k apply -f ./infra/nodepool.yaml
+```
+
+- Deploy Traefik
+
+```bash
+helmfile -f ./infra/helmfile.yaml.gotmpl -l app=traefik apply
+```
+
+- Get external IP address
+
+```bash
+EXTERNAL_IP=$(kubectl get svc -n traefik -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+```
+
+- Create an A record in the DNS provider so that qrpods.exoscale.dev resolves to the EXTERNAL_IP
+
+- Deploy cert-manager
+
+```bash
+helmfile -f ./infra/helmfile.yaml.gotmpl -l app=cert-manager apply
+```
+
+
+
+
+
+
+
+
+
+- Deploy the application
+
+```bash
+helm install qr-pods ./chart
+```
+
+
+
+
 
 ### Option 1: Deploy with Helm (Recommended)
 
@@ -44,16 +114,6 @@ helm upgrade qr-pods ./chart --set app.url=http://YOUR_EXTERNAL_IP
 
 ### Option 2: Deploy with Helmfile (Best for automation)
 
-**Method A: Using .env file (Recommended)**
-
-```bash
-# 1. Copy example env file and configure
-cp .env.example .env
-# Edit .env with your values (APP_URL, IMAGE_REPOSITORY, REGISTRY_USERNAME, etc.)
-
-# 2. Deploy with script
-./deploy.sh
-```
 
 **Method B: Export environment variables**
 

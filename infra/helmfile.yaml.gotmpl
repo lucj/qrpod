@@ -2,16 +2,20 @@ releases:
 
   - name: traefik
     namespace: traefik
+    labels:
+      app: traefik
     chart: oci://ghcr.io/traefik/helm/traefik
-    version: 39.0.2
+    version: 41.6.0
     values:
       - values-traefik.yaml
     createNamespace: true
 
   - name: cert-manager
     namespace: cert-manager
+    labels:
+      app: cert-manager
     chart: jetstack/cert-manager
-    version: v1.19.4
+    version: v1.21.2
     values:
       - values-cert-manager.yaml
     createNamespace: true

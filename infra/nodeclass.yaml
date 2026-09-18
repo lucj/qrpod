@@ -4,6 +4,6 @@ metadata:
   name: standard
 spec:
   imageTemplateSelector:
-    version: "1.35.0"
-  securityGroups:
-    - "d2b3d077-fe05-4360-97f0-23c411833a22"
+    version: "1.37.0"
+  securityGroupSelectorTerms:
+    - id: "fd0bd62c-eb19-45e3-b528-2ed5c8d3050a"

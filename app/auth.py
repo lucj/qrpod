@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import request, jsonify, session, redirect, url_for
-from app.config import config
+from config import config
 
 
 def require_token(f):

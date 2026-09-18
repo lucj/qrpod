@@ -1,13 +1,13 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY app/pyproject.toml app/uv.lock ./
+RUN uv sync --frozen --no-dev
 
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY app/ ./app/
-COPY templates/ ./templates/
+COPY app/ ./
 
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
@@ -16,7 +16,7 @@ USER appuser
 
 EXPOSE 5000
 
-ENV FLASK_APP=app.main:app
+ENV FLASK_APP=main:app
 ENV FLASK_ENV=production
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app.main:app"]
+CMD ["uv", "run", "gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "main:app"]

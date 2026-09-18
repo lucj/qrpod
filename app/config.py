@@ -11,6 +11,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_urlsafe(32)
     NAMESPACE = os.environ.get('NAMESPACE', 'default')
     APP_URL = os.environ.get('APP_URL', 'http://localhost:5000')
+    APP_PORT = os.environ.get('APP_PORT', '5000')
     POD_LABEL = 'qrpods'
     POD_IMAGE = 'nginx:alpine'
 

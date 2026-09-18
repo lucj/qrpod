@@ -6,7 +6,7 @@ import threading
 from collections import Counter
 from kubernetes import client, config as k8s_config
 from kubernetes.client.rest import ApiException
-from app.config import config
+from config import config
 
 CACHE_TTL = 5  # seconds between Kubernetes API polls
 

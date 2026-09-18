@@ -1,11 +1,11 @@
 import random
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
-from app.config import config
-from app.auth import require_token, require_session
-from app.k8s_manager import k8s_manager
+from config import config
+from auth import require_token, require_session
+from k8s_manager import k8s_manager
 
 app = Flask(__name__,
-            template_folder='../templates',
+            template_folder='./templates',
             static_folder='static',
             static_url_path='/static')
 
@@ -77,4 +77,4 @@ if __name__ == '__main__':
     print(f"Scan Token: {config.SCAN_TOKEN}")
     print(f"Namespace: {config.NAMESPACE}")
     print(f"App URL: {config.APP_URL}")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=config.APP_PORT, debug=False)

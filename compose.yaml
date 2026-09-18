@@ -1,11 +1,11 @@
 services:
   qr-app:
     build: .
-    command: flask run --reload --host=0.0.0.0 --port=5000
+    command: uv run flask run --reload --host=0.0.0.0 --port=5000
     ports:
       - "5001:5000"
     environment:
-      FLASK_APP: app.main:app
+      FLASK_APP: main:app
       FLASK_DEBUG: "1"
       SCAN_TOKEN: ${SCAN_TOKEN:-SCANMEPODS}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-QRPODSEXODASH}
@@ -18,15 +18,12 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./templates
-          target: /app/templates
-        - action: sync
           path: ./app/static
-          target: /app/app/static
+          target: /app/static
         - action: sync+restart
           path: ./app
-          target: /app/app
+          target: /app
           ignore:
             - static/
         - action: rebuild
-          path: requirements.txt
+          path: ./app/pyproject.toml
