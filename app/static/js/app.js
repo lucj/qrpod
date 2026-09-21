@@ -38,7 +38,8 @@ async function updatePodCount() {
         const newPending = data.pending;
         const newCreating = data.creating;
         const newCrashing = data.crashing;
-        const newRunning = newCount - newPending - newCreating - newCrashing;
+        const newTerminating = data.terminating;
+        const newRunning = newCount - newPending - newCreating - newCrashing - newTerminating;
 
         if (newCount !== currentPodCount) {
             currentPodCount = newCount;
@@ -91,12 +92,24 @@ async function updatePodCount() {
             podCrashingRow.classList.toggle('hidden', newCrashing === 0);
         }
 
+        const podTerminatingElement = document.getElementById('pod-terminating');
+        if (podTerminatingElement) {
+            podTerminatingElement.textContent = newTerminating;
+        }
+
+        const podTerminatingRow = document.getElementById('pod-terminating-row');
+        if (podTerminatingRow) {
+            podTerminatingRow.classList.toggle('hidden', newTerminating === 0);
+        }
+
         const podsRow = document.getElementById('metric-pods-row');
         if (podsRow) {
-            // Nothing worth breaking out separately: either there are no
-            // pods at all, or every pod is running (same number as the
-            // big total already shown on the left).
-            podsRow.classList.toggle('no-details', newCount === 0 || newRunning === newCount);
+            // Only collapse when there are no pods at all. Running is kept
+            // visible even when it equals the total — toggling the whole
+            // right column on and off every time pods finish starting up
+            // was a more distracting flicker than the minor redundancy of
+            // always showing "Running".
+            podsRow.classList.toggle('no-details', newCount === 0);
         }
         return true;
     } catch (error) {
@@ -162,10 +175,15 @@ async function updateNodeCount() {
         if (typeList) {
             const instanceTypes = data.instance_types || {};
             const launchingTypes = data.launching_types || {};
-            // Union of every type that's either already running or being
-            // launched by Karpenter right now, so a brand-new type shows up
+            const terminatingTypes = data.terminating_types || {};
+            // Union of every type that's running, launching, or being
+            // consolidated away right now, so a brand-new type shows up
             // immediately even with zero ready nodes of that type yet.
-            const allTypes = new Set([...Object.keys(instanceTypes), ...Object.keys(launchingTypes)]);
+            const allTypes = new Set([
+                ...Object.keys(instanceTypes),
+                ...Object.keys(launchingTypes),
+                ...Object.keys(terminatingTypes),
+            ]);
             const hasTypes = allTypes.size > 0;
 
             typeList.innerHTML = [...allTypes]
@@ -173,16 +191,20 @@ async function updateNodeCount() {
                 .map((type) => {
                     const ready = instanceTypes[type] || 0;
                     const launching = launchingTypes[type] || 0;
-                    // "(+X)" comes before Y and Y is always the trailing
-                    // token, so Y stays anchored at the row's right edge —
-                    // launching nodes appearing/disappearing never shifts
-                    // the ready count's position.
+                    const terminating = terminatingTypes[type] || 0;
+                    // Both "(+X)" and "(-Z)" come before Y, and Y is always
+                    // the trailing token, so Y stays anchored at the row's
+                    // right edge — nodes starting or finishing launching/
+                    // terminating never shifts the ready count's position.
                     let countHtml = '';
                     if (launching > 0) {
                         countHtml += `<span class="metric-detail-highlight">(+${launching})</span>`;
                     }
+                    if (terminating > 0) {
+                        countHtml += `${launching > 0 ? ' ' : ''}<span class="metric-detail-fade">(-${terminating})</span>`;
+                    }
                     if (ready > 0) {
-                        countHtml += `${launching > 0 ? ' ' : ''}${ready}`;
+                        countHtml += `${(launching > 0 || terminating > 0) ? ' ' : ''}${ready}`;
                     }
                     return `<div class="metric-detail-item"><span>${type}</span><span class="metric-detail-count">${countHtml}</span></div>`;
                 })
@@ -259,24 +281,163 @@ function initCostModal() {
     });
 }
 
-function initCostReset() {
-    const btn = document.getElementById('cost-reset-btn');
-    if (!btn) return;
+// Shared wiring for the "explain the action, single confirm button, POST on
+// click" modal pattern (reset cost, create memory/cpu pod). Each caller just
+// supplies its own element ids, endpoint, and what to refresh afterward.
+function initConfirmActionModal({ triggerId, overlayId, closeId, confirmId, endpoint, refresh, errorMessage }) {
+    const btn = document.getElementById(triggerId);
+    const overlay = document.getElementById(overlayId);
+    const closeBtn = document.getElementById(closeId);
+    const confirmBtn = document.getElementById(confirmId);
+    if (!btn || !overlay || !closeBtn || !confirmBtn) return;
 
-    btn.addEventListener('click', async () => {
-        if (!confirm('Reset the total spent counter back to €0.00? This cannot be undone.')) {
-            return;
-        }
+    const open = () => overlay.classList.add('open');
+    const close = () => overlay.classList.remove('open');
+
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
+
+    confirmBtn.addEventListener('click', async () => {
         try {
-            const response = await fetch('/api/reset-cost', { method: 'POST' });
+            const response = await fetch(endpoint, { method: 'POST' });
             if (!response.ok) {
-                throw new Error('Failed to reset total spent');
+                throw new Error(errorMessage);
             }
-            updateNodeCount();
+            close();
+            refresh();
         } catch (error) {
-            console.error('Error resetting total spent:', error);
-            alert('Failed to reset total spent. Please try again.');
+            console.error(errorMessage, error);
+            alert(`${errorMessage}. Please try again.`);
         }
+    });
+}
+
+function initCostReset() {
+    initConfirmActionModal({
+        triggerId: 'cost-reset-btn',
+        overlayId: 'reset-cost-modal-overlay',
+        closeId: 'reset-cost-modal-close',
+        confirmId: 'reset-cost-confirm-btn',
+        endpoint: '/api/reset-cost',
+        refresh: updateNodeCount,
+        errorMessage: 'Failed to reset total spent',
+    });
+}
+
+function initDeleteModal() {
+    const btn = document.getElementById('delete-pods-btn');
+    const overlay = document.getElementById('delete-modal-overlay');
+    const closeBtn = document.getElementById('delete-modal-close');
+    const select = document.getElementById('delete-percent-select');
+    const countEl = document.getElementById('delete-deployment-count');
+    const previewEl = document.getElementById('delete-preview-count');
+    const confirmBtn = document.getElementById('delete-confirm-btn');
+    if (!btn || !overlay || !closeBtn || !select || !countEl || !previewEl || !confirmBtn) return;
+
+    let currentCount = 0;
+
+    function updatePreview() {
+        const percent = parseInt(select.value, 10);
+        const toDelete = Math.ceil(currentCount * percent / 100);
+        previewEl.textContent = currentCount > 0
+            ? `≈ ${toDelete} deployment${toDelete === 1 ? '' : 's'} will be deleted`
+            : '';
+    }
+
+    async function open() {
+        overlay.classList.add('open');
+        countEl.textContent = '…';
+        try {
+            const response = await fetch('/api/deployment-count');
+            if (!response.ok) throw new Error('Failed to fetch deployment count');
+            const data = await response.json();
+            currentCount = data.count || 0;
+            countEl.textContent = currentCount;
+            updatePreview();
+        } catch (error) {
+            countEl.textContent = '—';
+            console.error('Error fetching deployment count:', error);
+        }
+    }
+
+    const close = () => overlay.classList.remove('open');
+
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
+    select.addEventListener('change', updatePreview);
+
+    confirmBtn.addEventListener('click', async () => {
+        const percent = parseInt(select.value, 10);
+        try {
+            const response = await fetch('/api/delete-deployments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ percent }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to delete deployments');
+            }
+            close();
+            updateMetrics();
+        } catch (error) {
+            console.error('Error deleting deployments:', error);
+            alert('Failed to delete deployments. Please try again.');
+        }
+    });
+}
+
+function initNodesModal() {
+    const btn = document.getElementById('nodes-info-btn');
+    const overlay = document.getElementById('nodes-modal-overlay');
+    const closeBtn = document.getElementById('nodes-modal-close');
+    if (!btn || !overlay || !closeBtn) return;
+
+    const open = () => overlay.classList.add('open');
+    const close = () => overlay.classList.remove('open');
+
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
+}
+
+function initMemoryPodModal() {
+    initConfirmActionModal({
+        triggerId: 'memory-pod-btn',
+        overlayId: 'memory-pod-modal-overlay',
+        closeId: 'memory-pod-modal-close',
+        confirmId: 'memory-pod-confirm-btn',
+        endpoint: '/api/create-memory-pod',
+        refresh: updateMetrics,
+        errorMessage: 'Failed to create memory-heavy pod',
+    });
+}
+
+function initCpuPodModal() {
+    initConfirmActionModal({
+        triggerId: 'cpu-pod-btn',
+        overlayId: 'cpu-pod-modal-overlay',
+        closeId: 'cpu-pod-modal-close',
+        confirmId: 'cpu-pod-confirm-btn',
+        endpoint: '/api/create-cpu-pod',
+        refresh: updateMetrics,
+        errorMessage: 'Failed to create CPU-heavy pod',
     });
 }
 
@@ -356,6 +517,14 @@ async function updateNodepoolResources() {
         currentMemoryCapacityBytes = parseMemoryBytes(capacity.memory);
         currentMemoryLimitBytes = parseMemoryBytes(limits.memory);
         updateIconScale();
+
+        const typesEl = document.getElementById('nodes-available-types');
+        if (typesEl) {
+            const availableTypes = data.available_types || [];
+            typesEl.innerHTML = availableTypes
+                .map((type) => `<span class="type-chip">${type}</span>`)
+                .join('');
+        }
         return true;
     } catch (error) {
         console.error('Error updating nodepool resources:', error);
@@ -399,6 +568,10 @@ document.addEventListener('DOMContentLoaded', function() {
     initQRCode();
     initCostModal();
     initCostReset();
+    initDeleteModal();
+    initNodesModal();
+    initMemoryPodModal();
+    initCpuPodModal();
     startPolling();
     updateIconScale();
 });

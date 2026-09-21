@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import time
 import random
 import threading
@@ -41,9 +42,9 @@ class KubernetesManager:
         self.custom = client.CustomObjectsApi()
 
         self._cache = {
-            "pod_count":          {"total": 0, "pending": 0, "creating": 0, "crashing": 0},
-            "node_count":         {"total": 0, "launching": 0, "instance_types": {}, "launching_types": {}, "hourly_price": 0.0, "price_breakdown": []},
-            "nodepool_resources": {"capacity": {}, "limits": {}},
+            "pod_count":          {"total": 0, "pending": 0, "creating": 0, "crashing": 0, "terminating": 0},
+            "node_count":         {"total": 0, "launching": 0, "instance_types": {}, "launching_types": {}, "terminating": 0, "terminating_types": {}, "hourly_price": 0.0, "price_breakdown": []},
+            "nodepool_resources": {"capacity": {}, "limits": {}, "available_types": []},
             "total_cost":         self._load_total_cost(),
         }
         self._lock = threading.Lock()
@@ -80,11 +81,18 @@ class KubernetesManager:
             pending = 0
             creating = 0
             crashing = 0
+            terminating = 0
             for item in items:
                 phase = item.get("status", {}).get("phase", "")
                 if phase not in ("Running", "Pending"):
                     continue
                 total += 1
+                # Mirrors kubectl's own convention: a pod with deletionTimestamp
+                # set shows as "Terminating" regardless of its container or
+                # scheduling state, taking precedence over every other bucket.
+                if item.get("metadata", {}).get("deletionTimestamp"):
+                    terminating += 1
+                    continue
                 if not item.get("spec", {}).get("nodeName"):
                     pending += 1
                     continue
@@ -113,7 +121,13 @@ class KubernetesManager:
                     crashing += 1
                 elif is_creating:
                     creating += 1
-            result = {"total": total, "pending": pending, "creating": creating, "crashing": crashing}
+            result = {
+                "total": total,
+                "pending": pending,
+                "creating": creating,
+                "crashing": crashing,
+                "terminating": terminating,
+            }
         except ApiException as e:
             print(f"Error refreshing pod count: {e}")
             return
@@ -144,6 +158,7 @@ class KubernetesManager:
 
             ready_types = Counter()
             launching_types = Counter()
+            terminating_types = Counter()
             all_types = Counter()  # includes unresolved-type claims, for pricing
             for nc in nodeclaims.get("items", []):
                 conditions = nc.get("status", {}).get("conditions", [])
@@ -155,6 +170,12 @@ class KubernetesManager:
                     # rather than bucketing it under "unknown".
                     continue
                 (ready_types if is_ready else launching_types)[itype] += 1
+                # A NodeClaim being consolidated (or otherwise disrupted) away
+                # gets deletionTimestamp set and is gracefully drained before
+                # it actually disappears — it's still Ready and still counted
+                # above during that window, this just flags it as leaving.
+                if nc.get("metadata", {}).get("deletionTimestamp"):
+                    terminating_types[itype] += 1
 
             price_breakdown = sorted(
                 (
@@ -174,6 +195,8 @@ class KubernetesManager:
                 "instance_types": dict(ready_types),
                 "launching": sum(launching_types.values()),
                 "launching_types": dict(launching_types),
+                "terminating": sum(terminating_types.values()),
+                "terminating_types": dict(terminating_types),
                 "hourly_price": hourly_price,
                 "price_breakdown": price_breakdown,
             }
@@ -253,12 +276,21 @@ class KubernetesManager:
                 )
                 capacity = {}
                 limits = {}
+                available_types = set()
                 for np in nodepools.get('items', []):
                     for key, value in np.get('status', {}).get('resources', {}).items():
                         capacity[key] = value
                     for key, value in np.get('spec', {}).get('limits', {}).items():
                         limits[key] = value
-                result = {"capacity": capacity, "limits": limits}
+                    requirements = np.get('spec', {}).get('template', {}).get('spec', {}).get('requirements', [])
+                    for req in requirements:
+                        if req.get('key') == 'node.kubernetes.io/instance-type' and req.get('operator') == 'In':
+                            available_types.update(req.get('values', []))
+                result = {
+                    "capacity": capacity,
+                    "limits": limits,
+                    "available_types": sorted(available_types),
+                }
             except ApiException:
                 continue
             except Exception as e:
@@ -290,11 +322,43 @@ class KubernetesManager:
 
     # ------------------------------------------------------------------
 
-    def create_deployment(self, count):
-        timestamp = int(time.time())
-        deployment_name = f"qr-deployment-{timestamp}-{random.randint(1000, 9999)}"
+    def get_deployment_count(self):
+        try:
+            deployments = self.apps_v1.list_namespaced_deployment(
+                namespace=config.NAMESPACE,
+                label_selector="created-by=qr-scan"
+            )
+            return len(deployments.items)
+        except ApiException as e:
+            print(f"Error listing deployments: {e}")
+            return 0
 
-        deployment_manifest = {
+    def delete_deployments(self, percent):
+        try:
+            deployments = self.apps_v1.list_namespaced_deployment(
+                namespace=config.NAMESPACE,
+                label_selector="created-by=qr-scan"
+            )
+            items = deployments.items
+        except ApiException as e:
+            print(f"Error listing deployments for deletion: {e}")
+            return 0
+
+        count_to_delete = math.ceil(len(items) * percent / 100)
+        deleted = 0
+        for dep in items[:count_to_delete]:
+            try:
+                self.apps_v1.delete_namespaced_deployment(
+                    name=dep.metadata.name,
+                    namespace=config.NAMESPACE
+                )
+                deleted += 1
+            except ApiException as e:
+                print(f"Error deleting deployment {dep.metadata.name}: {e}")
+        return deleted
+
+    def _build_deployment_manifest(self, deployment_name, replicas, image, resources, timestamp):
+        return {
             "apiVersion": "apps/v1",
             "kind": "Deployment",
             "metadata": {
@@ -308,7 +372,7 @@ class KubernetesManager:
                 }
             },
             "spec": {
-                "replicas": count,
+                "replicas": replicas,
                 "selector": {
                     "matchLabels": {
                         "deployment": deployment_name
@@ -326,17 +390,8 @@ class KubernetesManager:
                         "containers": [
                             {
                                 "name": "www",
-                                "image": config.POD_IMAGE,
-                                "resources": {
-                                    "requests": {
-                                        "cpu": "32m",
-                                        "memory": "64Mi"
-                                    },
-                                    "limits": {
-                                        "cpu": "32m",
-                                        "memory": "64Mi"
-                                    }
-                                }
+                                "image": image,
+                                "resources": resources
                             }
                         ],
                         "affinity": {
@@ -360,16 +415,68 @@ class KubernetesManager:
             }
         }
 
+    def create_deployment(self, count):
+        timestamp = int(time.time())
+        deployment_name = f"qr-deployment-{timestamp}-{random.randint(1000, 9999)}"
+        resources = {
+            "requests": {"cpu": "32m", "memory": "64Mi"},
+            "limits": {"cpu": "32m", "memory": "64Mi"}
+        }
+        manifest = self._build_deployment_manifest(
+            deployment_name, count, config.POD_IMAGE, resources, timestamp
+        )
         try:
             self.apps_v1.create_namespaced_deployment(
                 namespace=config.NAMESPACE,
-                body=deployment_manifest
+                body=manifest
             )
             print(f"Created deployment: {deployment_name} with {count} replicas")
             return count
         except ApiException as e:
             print(f"Error creating deployment {deployment_name}: {e}")
             return 0
+
+    def create_memory_pod(self):
+        timestamp = int(time.time())
+        deployment_name = f"qr-memory-{timestamp}-{random.randint(1000, 9999)}"
+        resources = {
+            "requests": {"cpu": "100m", "memory": "20Gi"},
+            "limits": {"cpu": "100m", "memory": "20Gi"}
+        }
+        manifest = self._build_deployment_manifest(
+            deployment_name, 1, "nginx:1.30.5-alpine3.24", resources, timestamp
+        )
+        try:
+            self.apps_v1.create_namespaced_deployment(
+                namespace=config.NAMESPACE,
+                body=manifest
+            )
+            print(f"Created memory-test deployment: {deployment_name}")
+            return True
+        except ApiException as e:
+            print(f"Error creating memory-test deployment {deployment_name}: {e}")
+            return False
+
+    def create_cpu_pod(self):
+        timestamp = int(time.time())
+        deployment_name = f"qr-cpu-{timestamp}-{random.randint(1000, 9999)}"
+        resources = {
+            "requests": {"cpu": "10", "memory": "64Mi"},
+            "limits": {"cpu": "10", "memory": "64Mi"}
+        }
+        manifest = self._build_deployment_manifest(
+            deployment_name, 1, "nginx:1.30.5-alpine3.24", resources, timestamp
+        )
+        try:
+            self.apps_v1.create_namespaced_deployment(
+                namespace=config.NAMESPACE,
+                body=manifest
+            )
+            print(f"Created cpu-test deployment: {deployment_name}")
+            return True
+        except ApiException as e:
+            print(f"Error creating cpu-test deployment {deployment_name}: {e}")
+            return False
 
 
 k8s_manager = KubernetesManager()

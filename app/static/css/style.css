@@ -164,6 +164,7 @@ body {
 }
 
 .metric-card {
+    position: relative;
     background: white;
     border-radius: 30px;
     padding: 18px 30px;
@@ -175,6 +176,44 @@ body {
     flex-direction: column;
     justify-content: center;
     overflow: hidden;
+}
+
+.corner-icon {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.corner-icon:hover {
+    color: #DA2A1B;
+    transform: scale(1.1);
+}
+
+/* Informational corner icons (not destructive) hover blue instead of red */
+#cost-info-btn:hover,
+#nodes-info-btn:hover,
+#memory-pod-btn:hover,
+#cpu-pod-btn:hover {
+    color: #667eea;
+}
+
+.corner-icon-secondary {
+    right: 46px;
+}
+
+.corner-icon-tertiary {
+    right: 74px;
 }
 
 .metric-card:hover {
@@ -260,6 +299,13 @@ body {
     padding: 2px 0;
     border-bottom: 1px solid #f1f5f9;
     font-family: 'Monaco', 'Courier New', monospace;
+    white-space: nowrap;
+}
+
+.metric-detail-item > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .metric-detail-item:last-child {
@@ -303,26 +349,14 @@ body {
     color: #f59e0b;
 }
 
+.metric-detail-fade {
+    color: #94a3b8;
+}
+
 .hidden {
     display: none;
 }
 
-.info-icon {
-    background: none;
-    border: none;
-    padding: 0;
-    margin-left: 2px;
-    font-size: 1rem;
-    line-height: 1;
-    color: #94a3b8;
-    cursor: pointer;
-    vertical-align: middle;
-    transition: color 0.2s ease;
-}
-
-.info-icon:hover {
-    color: #667eea;
-}
 
 /* Cost Breakdown Modal */
 .modal-overlay {
@@ -349,6 +383,11 @@ body {
     box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
 }
 
+.modal-box-narrow {
+    min-width: 320px;
+    max-width: 380px;
+}
+
 .modal-box h3 {
     color: #DA2A1B;
     font-size: 1.6rem;
@@ -369,6 +408,97 @@ body {
 
 .modal-close:hover {
     color: #DA2A1B;
+}
+
+.delete-modal-count {
+    font-size: 1.1rem;
+    color: #475569;
+    margin-bottom: 20px;
+}
+
+.delete-modal-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    font-size: 1rem;
+    color: #475569;
+}
+
+.delete-modal-controls select {
+    font-size: 1rem;
+    font-family: inherit;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+}
+
+#delete-preview-count {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.delete-confirm-btn {
+    background: #DA2A1B;
+    color: white;
+    border: none;
+    padding: 10px 28px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.delete-confirm-btn:hover {
+    background: #b8220f;
+}
+
+.create-confirm-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 28px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.create-confirm-btn:hover {
+    background: #5568d3;
+}
+
+.type-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 480px;
+}
+
+.type-chip {
+    background: #f1f5f9;
+    color: #475569;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+.modal-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: #667eea;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.modal-link:hover {
+    text-decoration: underline;
 }
 
 .invoice-table {

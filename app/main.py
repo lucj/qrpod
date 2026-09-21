@@ -57,6 +57,7 @@ def pod_count():
         'pending': counts['pending'],
         'creating': counts['creating'],
         'crashing': counts['crashing'],
+        'terminating': counts['terminating'],
     })
 
 
@@ -68,6 +69,8 @@ def node_count():
         'launching': counts['launching'],
         'instance_types': counts['instance_types'],
         'launching_types': counts['launching_types'],
+        'terminating': counts['terminating'],
+        'terminating_types': counts['terminating_types'],
         'hourly_price': counts['hourly_price'],
         'price_breakdown': counts['price_breakdown'],
         'total_cost': k8s_manager.get_total_cost(),
@@ -79,6 +82,40 @@ def node_count():
 def reset_cost():
     k8s_manager.reset_total_cost()
     return jsonify({'status': 'ok'})
+
+
+@app.route('/api/deployment-count')
+@require_session
+def deployment_count():
+    return jsonify({'count': k8s_manager.get_deployment_count()})
+
+
+@app.route('/api/delete-deployments', methods=['POST'])
+@require_session
+def delete_deployments():
+    data = request.get_json(silent=True) or {}
+    try:
+        percent = int(data.get('percent'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid percent'}), 400
+    if percent not in (10, 25, 50, 75, 100):
+        return jsonify({'error': 'Invalid percent'}), 400
+    deleted = k8s_manager.delete_deployments(percent)
+    return jsonify({'status': 'ok', 'deleted': deleted})
+
+
+@app.route('/api/create-memory-pod', methods=['POST'])
+@require_session
+def create_memory_pod():
+    created = k8s_manager.create_memory_pod()
+    return jsonify({'status': 'ok' if created else 'error'})
+
+
+@app.route('/api/create-cpu-pod', methods=['POST'])
+@require_session
+def create_cpu_pod():
+    created = k8s_manager.create_cpu_pod()
+    return jsonify({'status': 'ok' if created else 'error'})
 
 
 @app.route('/api/nodepool')
