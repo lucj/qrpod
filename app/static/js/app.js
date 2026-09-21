@@ -282,8 +282,8 @@ function initCostModal() {
 }
 
 // Shared wiring for the "explain the action, single confirm button, POST on
-// click" modal pattern (reset cost, create memory/cpu pod). Each caller just
-// supplies its own element ids, endpoint, and what to refresh afterward.
+// click" modal pattern (reset cost). Each caller just supplies its own
+// element ids, endpoint, and what to refresh afterward.
 function initConfirmActionModal({ triggerId, overlayId, closeId, confirmId, endpoint, refresh, errorMessage }) {
     const btn = document.getElementById(triggerId);
     const overlay = document.getElementById(overlayId);
@@ -417,27 +417,100 @@ function initNodesModal() {
     });
 }
 
+// Shared wiring for the "single named pod, toggle between create and
+// delete" modal pattern (memory/cpu test pods). Only the Create button and
+// spec list show when the deployment doesn't exist yet; only the Delete
+// button and delete notice show once it does.
+function initTogglePodModal({ triggerId, overlayId, closeId, createBtnId, deleteBtnId, createInfoId, deleteInfoId, statusEndpoint, createEndpoint, deleteEndpoint, refresh, errorMessage }) {
+    const btn = document.getElementById(triggerId);
+    const overlay = document.getElementById(overlayId);
+    const closeBtn = document.getElementById(closeId);
+    const createBtn = document.getElementById(createBtnId);
+    const deleteBtn = document.getElementById(deleteBtnId);
+    const createInfo = document.getElementById(createInfoId);
+    const deleteInfo = document.getElementById(deleteInfoId);
+    if (!btn || !overlay || !closeBtn || !createBtn || !deleteBtn || !createInfo || !deleteInfo) return;
+
+    const setState = (exists) => {
+        createInfo.classList.toggle('hidden', exists);
+        deleteInfo.classList.toggle('hidden', !exists);
+        createBtn.classList.toggle('hidden', exists);
+        deleteBtn.classList.toggle('hidden', !exists);
+    };
+
+    const refreshStatus = async () => {
+        try {
+            const response = await fetch(statusEndpoint);
+            if (!response.ok) throw new Error(errorMessage);
+            const data = await response.json();
+            setState(!!data.exists);
+        } catch (error) {
+            console.error(errorMessage, error);
+        }
+    };
+
+    const open = () => {
+        overlay.classList.add('open');
+        refreshStatus();
+    };
+    const close = () => overlay.classList.remove('open');
+
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
+
+    const runAction = async (endpoint) => {
+        try {
+            const response = await fetch(endpoint, { method: 'POST' });
+            if (!response.ok) throw new Error(errorMessage);
+            close();
+            refresh();
+        } catch (error) {
+            console.error(errorMessage, error);
+            alert(`${errorMessage}. Please try again.`);
+        }
+    };
+
+    createBtn.addEventListener('click', () => runAction(createEndpoint));
+    deleteBtn.addEventListener('click', () => runAction(deleteEndpoint));
+}
+
 function initMemoryPodModal() {
-    initConfirmActionModal({
+    initTogglePodModal({
         triggerId: 'memory-pod-btn',
         overlayId: 'memory-pod-modal-overlay',
         closeId: 'memory-pod-modal-close',
-        confirmId: 'memory-pod-confirm-btn',
-        endpoint: '/api/create-memory-pod',
+        createBtnId: 'memory-pod-create-btn',
+        deleteBtnId: 'memory-pod-delete-btn',
+        createInfoId: 'memory-pod-create-info',
+        deleteInfoId: 'memory-pod-delete-info',
+        statusEndpoint: '/api/memory-pod-status',
+        createEndpoint: '/api/create-memory-pod',
+        deleteEndpoint: '/api/delete-memory-pod',
         refresh: updateMetrics,
-        errorMessage: 'Failed to create memory-heavy pod',
+        errorMessage: 'Failed to update memory-heavy pod',
     });
 }
 
 function initCpuPodModal() {
-    initConfirmActionModal({
+    initTogglePodModal({
         triggerId: 'cpu-pod-btn',
         overlayId: 'cpu-pod-modal-overlay',
         closeId: 'cpu-pod-modal-close',
-        confirmId: 'cpu-pod-confirm-btn',
-        endpoint: '/api/create-cpu-pod',
+        createBtnId: 'cpu-pod-create-btn',
+        deleteBtnId: 'cpu-pod-delete-btn',
+        createInfoId: 'cpu-pod-create-info',
+        deleteInfoId: 'cpu-pod-delete-info',
+        statusEndpoint: '/api/cpu-pod-status',
+        createEndpoint: '/api/create-cpu-pod',
+        deleteEndpoint: '/api/delete-cpu-pod',
         refresh: updateMetrics,
-        errorMessage: 'Failed to create CPU-heavy pod',
+        errorMessage: 'Failed to update CPU-heavy pod',
     });
 }
 

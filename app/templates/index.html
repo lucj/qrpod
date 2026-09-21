@@ -56,7 +56,7 @@
             <!-- Right Column: Metrics -->
             <div class="metrics-column">
                 <div class="metric-card metric-pods">
-                    <button type="button" class="corner-icon corner-icon-tertiary" id="cpu-pod-btn" aria-label="Create CPU-heavy pod" title="Create CPU-heavy pod">
+                    <button type="button" class="corner-icon corner-icon-tertiary" id="cpu-pod-btn" aria-label="CPU-heavy pod" title="CPU-heavy pod">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
                             <rect x="9" y="9" width="6" height="6"></rect>
@@ -70,7 +70,7 @@
                             <line x1="1" y1="14" x2="4" y2="14"></line>
                         </svg>
                     </button>
-                    <button type="button" class="corner-icon corner-icon-secondary" id="memory-pod-btn" aria-label="Create memory-heavy pod" title="Create memory-heavy pod">
+                    <button type="button" class="corner-icon corner-icon-secondary" id="memory-pod-btn" aria-label="Memory-heavy pod" title="Memory-heavy pod">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="9" width="20" height="6" rx="1"></rect>
                             <line x1="6" y1="9" x2="6" y2="6"></line>
@@ -184,18 +184,40 @@
     <div class="modal-overlay" id="memory-pod-modal-overlay">
         <div class="modal-box modal-box-narrow">
             <button type="button" class="modal-close" id="memory-pod-modal-close" aria-label="Close">&times;</button>
-            <h3>Create Memory-Heavy Pod</h3>
-            <p class="delete-modal-count">This will create a Deployment with a single pod based on the <strong>nginx:1.30.5-alpine3.24</strong> image, with both requests and limits set to <strong>100m</strong> CPU and <strong>20Gi</strong> memory.</p>
-            <button type="button" class="create-confirm-btn" id="memory-pod-confirm-btn">Create</button>
+            <h3>Memory-Heavy Pod</h3>
+            <div id="memory-pod-create-info">
+                <p class="delete-modal-count">Create a Deployment named <strong>qr-memory</strong>:</p>
+                <div class="pod-spec-list">
+                    <div class="pod-spec-row"><span>Image</span><span>nginx:1.30.5-alpine3.24</span></div>
+                    <div class="pod-spec-row"><span>CPU request/limit</span><span>100m</span></div>
+                    <div class="pod-spec-row"><span>Memory request/limit</span><span>20Gi</span></div>
+                </div>
+            </div>
+            <p class="delete-modal-count hidden" id="memory-pod-delete-info">The <strong>qr-memory</strong> deployment will be deleted.</p>
+            <div class="modal-action-row">
+                <button type="button" class="create-confirm-btn" id="memory-pod-create-btn">Create</button>
+                <button type="button" class="delete-confirm-btn hidden" id="memory-pod-delete-btn">Delete</button>
+            </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="cpu-pod-modal-overlay">
         <div class="modal-box modal-box-narrow">
             <button type="button" class="modal-close" id="cpu-pod-modal-close" aria-label="Close">&times;</button>
-            <h3>Create CPU-Heavy Pod</h3>
-            <p class="delete-modal-count">This will create a Deployment with a single pod based on the <strong>nginx:1.30.5-alpine3.24</strong> image, with both requests and limits set to <strong>10</strong> CPU and <strong>64Mi</strong> memory.</p>
-            <button type="button" class="create-confirm-btn" id="cpu-pod-confirm-btn">Create</button>
+            <h3>CPU-Heavy Pod</h3>
+            <div id="cpu-pod-create-info">
+                <p class="delete-modal-count">Create a Deployment named <strong>qr-cpu</strong>:</p>
+                <div class="pod-spec-list">
+                    <div class="pod-spec-row"><span>Image</span><span>nginx:1.30.5-alpine3.24</span></div>
+                    <div class="pod-spec-row"><span>CPU request/limit</span><span>10</span></div>
+                    <div class="pod-spec-row"><span>Memory request/limit</span><span>64Mi</span></div>
+                </div>
+            </div>
+            <p class="delete-modal-count hidden" id="cpu-pod-delete-info">The <strong>qr-cpu</strong> deployment will be deleted.</p>
+            <div class="modal-action-row">
+                <button type="button" class="create-confirm-btn" id="cpu-pod-create-btn">Create</button>
+                <button type="button" class="delete-confirm-btn hidden" id="cpu-pod-delete-btn">Delete</button>
+            </div>
         </div>
     </div>
 

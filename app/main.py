@@ -111,11 +111,37 @@ def create_memory_pod():
     return jsonify({'status': 'ok' if created else 'error'})
 
 
+@app.route('/api/memory-pod-status')
+@require_session
+def memory_pod_status():
+    return jsonify({'exists': k8s_manager.memory_pod_exists()})
+
+
+@app.route('/api/delete-memory-pod', methods=['POST'])
+@require_session
+def delete_memory_pod():
+    deleted = k8s_manager.delete_memory_pod()
+    return jsonify({'status': 'ok' if deleted else 'error'})
+
+
 @app.route('/api/create-cpu-pod', methods=['POST'])
 @require_session
 def create_cpu_pod():
     created = k8s_manager.create_cpu_pod()
     return jsonify({'status': 'ok' if created else 'error'})
+
+
+@app.route('/api/cpu-pod-status')
+@require_session
+def cpu_pod_status():
+    return jsonify({'exists': k8s_manager.cpu_pod_exists()})
+
+
+@app.route('/api/delete-cpu-pod', methods=['POST'])
+@require_session
+def delete_cpu_pod():
+    deleted = k8s_manager.delete_cpu_pod()
+    return jsonify({'status': 'ok' if deleted else 'error'})
 
 
 @app.route('/api/nodepool')

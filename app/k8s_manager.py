@@ -14,6 +14,9 @@ CACHE_TTL = 2  # seconds between Kubernetes API polls
 COST_CONFIGMAP_NAME = "qrpods-cost-tracker"
 COST_PERSIST_INTERVAL = 30  # seconds between ConfigMap writes for the running total
 
+MEMORY_POD_NAME = "qr-memory"
+CPU_POD_NAME = "qr-cpu"
+
 PRICES_PATH = os.path.join(os.path.dirname(__file__), "assets", "prices.json")
 with open(PRICES_PATH) as f:
     INSTANCE_PRICES = {itype: float(price) for itype, price in json.load(f).items()}
@@ -436,47 +439,72 @@ class KubernetesManager:
             print(f"Error creating deployment {deployment_name}: {e}")
             return 0
 
+    def deployment_exists(self, name):
+        try:
+            self.apps_v1.read_namespaced_deployment(name=name, namespace=config.NAMESPACE)
+            return True
+        except ApiException as e:
+            if e.status != 404:
+                print(f"Error checking deployment {name}: {e}")
+            return False
+
+    def delete_deployment_by_name(self, name):
+        try:
+            self.apps_v1.delete_namespaced_deployment(name=name, namespace=config.NAMESPACE)
+            return True
+        except ApiException as e:
+            print(f"Error deleting deployment {name}: {e}")
+            return False
+
     def create_memory_pod(self):
-        timestamp = int(time.time())
-        deployment_name = f"qr-memory-{timestamp}-{random.randint(1000, 9999)}"
         resources = {
             "requests": {"cpu": "100m", "memory": "20Gi"},
             "limits": {"cpu": "100m", "memory": "20Gi"}
         }
         manifest = self._build_deployment_manifest(
-            deployment_name, 1, "nginx:1.30.5-alpine3.24", resources, timestamp
+            MEMORY_POD_NAME, 1, "nginx:1.30.5-alpine3.24", resources, int(time.time())
         )
         try:
             self.apps_v1.create_namespaced_deployment(
                 namespace=config.NAMESPACE,
                 body=manifest
             )
-            print(f"Created memory-test deployment: {deployment_name}")
+            print(f"Created memory-test deployment: {MEMORY_POD_NAME}")
             return True
         except ApiException as e:
-            print(f"Error creating memory-test deployment {deployment_name}: {e}")
+            print(f"Error creating memory-test deployment {MEMORY_POD_NAME}: {e}")
             return False
 
+    def memory_pod_exists(self):
+        return self.deployment_exists(MEMORY_POD_NAME)
+
+    def delete_memory_pod(self):
+        return self.delete_deployment_by_name(MEMORY_POD_NAME)
+
     def create_cpu_pod(self):
-        timestamp = int(time.time())
-        deployment_name = f"qr-cpu-{timestamp}-{random.randint(1000, 9999)}"
         resources = {
             "requests": {"cpu": "10", "memory": "64Mi"},
             "limits": {"cpu": "10", "memory": "64Mi"}
         }
         manifest = self._build_deployment_manifest(
-            deployment_name, 1, "nginx:1.30.5-alpine3.24", resources, timestamp
+            CPU_POD_NAME, 1, "nginx:1.30.5-alpine3.24", resources, int(time.time())
         )
         try:
             self.apps_v1.create_namespaced_deployment(
                 namespace=config.NAMESPACE,
                 body=manifest
             )
-            print(f"Created cpu-test deployment: {deployment_name}")
+            print(f"Created cpu-test deployment: {CPU_POD_NAME}")
             return True
         except ApiException as e:
-            print(f"Error creating cpu-test deployment {deployment_name}: {e}")
+            print(f"Error creating cpu-test deployment {CPU_POD_NAME}: {e}")
             return False
+
+    def cpu_pod_exists(self):
+        return self.deployment_exists(CPU_POD_NAME)
+
+    def delete_cpu_pod(self):
+        return self.delete_deployment_by_name(CPU_POD_NAME)
 
 
 k8s_manager = KubernetesManager()
