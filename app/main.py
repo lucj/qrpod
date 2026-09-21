@@ -63,6 +63,7 @@ def node_count():
         'not_ready': counts['not_ready'],
         'launching': counts['launching'],
         'instance_types': counts['instance_types'],
+        'hourly_price': counts['hourly_price'],
     })
 
 

@@ -105,6 +105,12 @@ async function updateNodeCount() {
             }
         }
 
+        const hourlyPriceElement = document.getElementById('hourly-price');
+        if (hourlyPriceElement) {
+            const price = data.hourly_price || 0;
+            hourlyPriceElement.textContent = `€${price.toFixed(price < 1 ? 3 : 2)}`;
+        }
+
         const typeList = document.getElementById('node-type-list');
         if (typeList) {
             const instanceTypes = data.instance_types || {};

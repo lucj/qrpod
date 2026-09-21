@@ -10,6 +10,10 @@ from config import config
 
 CACHE_TTL = 2  # seconds between Kubernetes API polls
 
+PRICES_PATH = os.path.join(os.path.dirname(__file__), "assets", "prices.json")
+with open(PRICES_PATH) as f:
+    INSTANCE_PRICES = {itype: float(price) for itype, price in json.load(f).items()}
+
 
 class KubernetesManager:
     def __init__(self):
@@ -35,7 +39,7 @@ class KubernetesManager:
 
         self._cache = {
             "pod_count":          {"total": 0, "pending": 0},
-            "node_count":         {"total": 0, "not_ready": 0, "launching": 0, "instance_types": {}},
+            "node_count":         {"total": 0, "not_ready": 0, "launching": 0, "instance_types": {}, "hourly_price": 0.0},
             "nodepool_resources": {"capacity": {}, "limits": {}},
         }
         self._lock = threading.Lock()
@@ -104,10 +108,15 @@ class KubernetesManager:
                     "node.kubernetes.io/instance-type", "unknown"
                 )
                 instance_types[itype] += 1
+            hourly_price = sum(
+                INSTANCE_PRICES.get(itype, 0.0) * count
+                for itype, count in instance_types.items()
+            )
             result = {
                 "total": ready,
                 "not_ready": total - ready,
                 "instance_types": dict(instance_types),
+                "hourly_price": hourly_price,
             }
         except ApiException as e:
             print(f"Error refreshing node count: {e}")
