@@ -13,7 +13,7 @@ class Config:
     APP_URL = os.environ.get('APP_URL', 'http://localhost:5000')
     APP_PORT = os.environ.get('APP_PORT', '5000')
     POD_LABEL = 'qrpods'
-    POD_IMAGE = 'nginx:alpine'
+    POD_IMAGE = 'nginx:1.30.5-alpine3.24'
 
     @staticmethod
     def init_app(app):

@@ -236,6 +236,14 @@ body {
     color: #667eea;
 }
 
+.metric-detail-warn {
+    color: #f59e0b;
+}
+
+.hidden {
+    display: none;
+}
+
 .info-icon {
     background: none;
     border: none;

@@ -37,13 +37,14 @@
             <div class="metrics-column">
                 <div class="metric-card metric-pods">
                     <div class="metric-label">Pods</div>
-                    <div class="metric-split-row">
+                    <div class="metric-split-row no-details" id="metric-pods-row">
                         <div class="metric-split-main">
                             <div class="metric-value" id="pod-count">0</div>
                         </div>
                         <div class="metric-detail-list">
                             <div class="metric-detail-item"><span>Pending</span><span class="metric-detail-count metric-detail-highlight" id="pod-pending">0</span></div>
                             <div class="metric-detail-item"><span>Running</span><span class="metric-detail-count" id="pod-running">0</span></div>
+                            <div class="metric-detail-item hidden" id="pod-crashing-row"><span>Crashing</span><span class="metric-detail-count metric-detail-warn" id="pod-crashing">0</span></div>
                         </div>
                     </div>
                 </div>

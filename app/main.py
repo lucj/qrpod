@@ -52,7 +52,7 @@ def scan():
 @app.route('/api/pod-count')
 def pod_count():
     counts = k8s_manager.get_pod_count()
-    return jsonify({'count': counts['total'], 'pending': counts['pending']})
+    return jsonify({'count': counts['total'], 'pending': counts['pending'], 'crashing': counts['crashing']})
 
 
 @app.route('/api/node-count')

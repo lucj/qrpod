@@ -36,7 +36,8 @@ async function updatePodCount() {
         const data = await response.json();
         const newCount = data.count;
         const newPending = data.pending;
-        const newRunning = newCount - newPending;
+        const newCrashing = data.crashing;
+        const newRunning = newCount - newPending - newCrashing;
 
         if (newCount !== currentPodCount) {
             currentPodCount = newCount;
@@ -62,6 +63,21 @@ async function updatePodCount() {
         const podRunningElement = document.getElementById('pod-running');
         if (podRunningElement) {
             podRunningElement.textContent = newRunning;
+        }
+
+        const podCrashingElement = document.getElementById('pod-crashing');
+        if (podCrashingElement) {
+            podCrashingElement.textContent = newCrashing;
+        }
+
+        const podCrashingRow = document.getElementById('pod-crashing-row');
+        if (podCrashingRow) {
+            podCrashingRow.classList.toggle('hidden', newCrashing === 0);
+        }
+
+        const podsRow = document.getElementById('metric-pods-row');
+        if (podsRow) {
+            podsRow.classList.toggle('no-details', newCount === 0);
         }
         return true;
     } catch (error) {

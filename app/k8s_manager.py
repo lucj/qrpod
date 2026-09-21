@@ -38,7 +38,7 @@ class KubernetesManager:
         self.custom = client.CustomObjectsApi()
 
         self._cache = {
-            "pod_count":          {"total": 0, "pending": 0},
+            "pod_count":          {"total": 0, "pending": 0, "crashing": 0},
             "node_count":         {"total": 0, "launching": 0, "instance_types": {}, "launching_types": {}, "hourly_price": 0.0, "price_breakdown": []},
             "nodepool_resources": {"capacity": {}, "limits": {}},
         }
@@ -71,13 +71,25 @@ class KubernetesManager:
             items = json.loads(raw.data).get("items", [])
             total = 0
             pending = 0
+            crashing = 0
             for item in items:
                 phase = item.get("status", {}).get("phase", "")
-                if phase in ("Running", "Pending"):
-                    total += 1
-                    if not item.get("spec", {}).get("nodeName"):
-                        pending += 1
-            result = {"total": total, "pending": pending}
+                if phase not in ("Running", "Pending"):
+                    continue
+                total += 1
+                if not item.get("spec", {}).get("nodeName"):
+                    pending += 1
+                    continue
+                # A pod stuck in CrashLoopBackOff/OOMKilled still reports
+                # phase=Running (kubelet keeps restarting it) — only count it
+                # as actually running if every container is presently up.
+                container_statuses = item.get("status", {}).get("containerStatuses", [])
+                healthy = bool(container_statuses) and all(
+                    "running" in cs.get("state", {}) for cs in container_statuses
+                )
+                if not healthy:
+                    crashing += 1
+            result = {"total": total, "pending": pending, "crashing": crashing}
         except ApiException as e:
             print(f"Error refreshing pod count: {e}")
             return
@@ -228,11 +240,11 @@ class KubernetesManager:
                                 "resources": {
                                     "requests": {
                                         "cpu": "32m",
-                                        "memory": "16Mi"
+                                        "memory": "64Mi"
                                     },
                                     "limits": {
                                         "cpu": "32m",
-                                        "memory": "16Mi"
+                                        "memory": "64Mi"
                                     }
                                 }
                             }
