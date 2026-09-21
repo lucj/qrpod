@@ -330,6 +330,18 @@ function initCostReset() {
     });
 }
 
+function initHundredPodsModal() {
+    initConfirmActionModal({
+        triggerId: 'hundred-pods-btn',
+        overlayId: 'hundred-pods-modal-overlay',
+        closeId: 'hundred-pods-modal-close',
+        confirmId: 'hundred-pods-confirm-btn',
+        endpoint: '/api/create-hundred-pods',
+        refresh: updateMetrics,
+        errorMessage: 'Failed to create 100 pods',
+    });
+}
+
 function initDeleteModal() {
     const btn = document.getElementById('delete-pods-btn');
     const overlay = document.getElementById('delete-modal-overlay');
@@ -407,6 +419,25 @@ function initDeleteModal() {
             console.error('Error deleting deployments:', error);
             alert('Failed to delete deployments. Please try again.');
         }
+    });
+}
+
+function initQrInfoModal() {
+    const btn = document.getElementById('qr-info-btn');
+    const overlay = document.getElementById('qr-info-modal-overlay');
+    const closeBtn = document.getElementById('qr-info-modal-close');
+    if (!btn || !overlay || !closeBtn) return;
+
+    const open = () => overlay.classList.add('open');
+    const close = () => overlay.classList.remove('open');
+
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
     });
 }
 
@@ -659,10 +690,12 @@ function stopPolling() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initQRCode();
+    initQrInfoModal();
     initCostModal();
     initCostReset();
     initDeleteModal();
     initNodesModal();
+    initHundredPodsModal();
     initMemoryPodModal();
     initCpuPodModal();
     startPolling();

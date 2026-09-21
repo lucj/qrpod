@@ -104,6 +104,13 @@ def delete_deployments():
     return jsonify({'status': 'ok', 'deleted': deleted})
 
 
+@app.route('/api/create-hundred-pods', methods=['POST'])
+@require_session
+def create_hundred_pods():
+    created = k8s_manager.create_deployment(100)
+    return jsonify({'status': 'ok' if created else 'error'})
+
+
 @app.route('/api/create-memory-pod', methods=['POST'])
 @require_session
 def create_memory_pod():

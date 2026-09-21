@@ -41,6 +41,11 @@ body {
     color: #64748b;
 }
 
+.subtitle strong {
+    color: #DA2A1B;
+    font-weight: 700;
+}
+
 .exoscale-logo {
     position: absolute;
     top: 40px;
@@ -65,6 +70,7 @@ body {
 }
 
 .qr-card {
+    position: relative;
     background: white;
     border-radius: 30px;
     padding: 50px 40px;
@@ -204,7 +210,9 @@ body {
 #cost-info-btn:hover,
 #nodes-info-btn:hover,
 #memory-pod-btn:hover,
-#cpu-pod-btn:hover {
+#cpu-pod-btn:hover,
+#hundred-pods-btn:hover,
+#qr-info-btn:hover {
     color: #667eea;
 }
 
@@ -214,6 +222,10 @@ body {
 
 .corner-icon-tertiary {
     right: 74px;
+}
+
+.corner-icon-quaternary {
+    right: 102px;
 }
 
 .metric-card:hover {

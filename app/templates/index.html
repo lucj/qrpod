@@ -12,13 +12,14 @@
         <img src="{{ url_for('static', filename='images/exoscale_logo.png') }}" class="exoscale-logo" alt="Exoscale">
         <header class="big-screen-header">
             <h1>Scan Me Maybe</h1>
-            <p class="subtitle">Scaling my Pods with Karpenter</p>
+            <p class="subtitle">Scaling my Pods with <strong>Karpenter</strong></p>
         </header>
 
         <div class="main-content">
             <!-- Left Column: QR Code -->
             <div class="qr-column">
                 <div class="qr-card">
+                    <button type="button" class="corner-icon" id="qr-info-btn" aria-label="Show scan details" title="Show scan details">ⓘ</button>
                     <h2>Create Pods</h2>
                     <div id="qrcode" class="qr-code-display"></div>
                     <p style="color: #DA2A1B; font-size: 1rem; margin-top: 5px;">Each scan creates a random number</p>
@@ -56,6 +57,7 @@
             <!-- Right Column: Metrics -->
             <div class="metrics-column">
                 <div class="metric-card metric-pods">
+                    <button type="button" class="corner-icon corner-icon-quaternary" id="hundred-pods-btn" aria-label="Create 100 pods" title="Create 100 pods">💯</button>
                     <button type="button" class="corner-icon corner-icon-tertiary" id="cpu-pod-btn" aria-label="CPU-heavy pod" title="CPU-heavy pod">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
@@ -164,6 +166,14 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="qr-info-modal-overlay">
+        <div class="modal-box modal-box-narrow">
+            <button type="button" class="modal-close" id="qr-info-modal-close" aria-label="Close">&times;</button>
+            <h3>Scan to Create Pods</h3>
+            <p class="delete-modal-count">Scanning the QR code creates a Deployment with a random number, between <strong>1</strong> and <strong>10</strong>, of <strong>nginx</strong> pods.</p>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="nodes-modal-overlay">
         <div class="modal-box">
             <button type="button" class="modal-close" id="nodes-modal-close" aria-label="Close">&times;</button>
@@ -174,11 +184,26 @@
     </div>
 
     <div class="modal-overlay" id="reset-cost-modal-overlay">
-        <div class="modal-box">
+        <div class="modal-box modal-box-narrow">
             <button type="button" class="modal-close" id="reset-cost-modal-close" aria-label="Close">&times;</button>
             <h3>Reset Total Spent</h3>
-            <p class="delete-modal-count">This will reset the "Total spent" counter back to €0.00. The current consumption tracked so far will be lost — this cannot be undone.</p>
+            <p class="delete-modal-count">This will reset the "Total spent" counter back to €0.00. The current consumption tracked so far will be lost. This cannot be undone.</p>
             <button type="button" class="delete-confirm-btn" id="reset-cost-confirm-btn">Reset</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="hundred-pods-modal-overlay">
+        <div class="modal-box modal-box-narrow">
+            <button type="button" class="modal-close" id="hundred-pods-modal-close" aria-label="Close">&times;</button>
+            <h3>100 Pods</h3>
+            <p class="delete-modal-count">Create a Deployment, same as scanning the QR code, with:</p>
+            <div class="pod-spec-list">
+                <div class="pod-spec-row"><span>Image</span><span>nginx:1.30.5-alpine3.24</span></div>
+                <div class="pod-spec-row"><span>Replicas</span><span>100</span></div>
+                <div class="pod-spec-row"><span>CPU request/limit</span><span>32m</span></div>
+                <div class="pod-spec-row"><span>Memory request/limit</span><span>64Mi</span></div>
+            </div>
+            <button type="button" class="create-confirm-btn" id="hundred-pods-confirm-btn">Create</button>
         </div>
     </div>
 
