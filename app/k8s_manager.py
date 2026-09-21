@@ -39,7 +39,7 @@ class KubernetesManager:
 
         self._cache = {
             "pod_count":          {"total": 0, "pending": 0},
-            "node_count":         {"total": 0, "not_ready": 0, "launching": 0, "instance_types": {}, "hourly_price": 0.0},
+            "node_count":         {"total": 0, "launching": 0, "instance_types": {}, "launching_types": {}, "hourly_price": 0.0, "price_breakdown": []},
             "nodepool_resources": {"capacity": {}, "limits": {}},
         }
         self._lock = threading.Lock()
@@ -56,7 +56,6 @@ class KubernetesManager:
             try:
                 self._refresh_pod_count()
                 self._refresh_node_count()
-                self._refresh_launching_count()
                 self._refresh_nodepool_resources()
             except Exception as e:
                 print(f"Unexpected error in poll loop: {e}")
@@ -86,48 +85,14 @@ class KubernetesManager:
             self._cache["pod_count"] = result
 
     def _refresh_node_count(self):
-        try:
-            # "karpenter.sh/nodepool" is set by kubelet at boot time (from the
-            # NodePool's user-data), so it's visible as soon as the Node object
-            # registers with the API server. "karpenter.sh/registered=true" is
-            # only added later, once Karpenter's own controller reconciles the
-            # node — waiting for that adds a very noticeable, avoidable delay.
-            raw = self.v1.list_node(
-                label_selector="karpenter.sh/nodepool",
-                _preload_content=False
-            )
-            items = json.loads(raw.data).get("items", [])
-            total = len(items)
-            ready = 0
-            instance_types = Counter()
-            for item in items:
-                conditions = item.get("status", {}).get("conditions", [])
-                if any(c.get("type") == "Ready" and c.get("status") == "True" for c in conditions):
-                    ready += 1
-                itype = item.get("metadata", {}).get("labels", {}).get(
-                    "node.kubernetes.io/instance-type", "unknown"
-                )
-                instance_types[itype] += 1
-            hourly_price = sum(
-                INSTANCE_PRICES.get(itype, 0.0) * count
-                for itype, count in instance_types.items()
-            )
-            result = {
-                "total": ready,
-                "not_ready": total - ready,
-                "instance_types": dict(instance_types),
-                "hourly_price": hourly_price,
-            }
-        except ApiException as e:
-            print(f"Error refreshing node count: {e}")
-            return
-        with self._lock:
-            self._cache["node_count"].update(result)
-
-    def _refresh_launching_count(self):
-        # NodeClaims appear the instant Karpenter decides to scale up — well
-        # before the underlying instance boots and joins as a Node — so this
-        # is the earliest possible signal that a scale-up was triggered.
+        # Sourced entirely from NodeClaims rather than Node objects. A
+        # NodeClaim's own Ready condition (Launched && Registered &&
+        # Initialized) is set by Karpenter's controller, while a Node's
+        # Ready condition is set by kubelet — two different controllers on
+        # two different objects, which used to drift apart for a couple of
+        # seconds around the transition (the node count already bumped while
+        # the launching count hadn't caught up yet). Reading one object once
+        # per poll makes a claim move from launching to ready atomically.
         for version in ("v1", "v1beta1"):
             try:
                 nodeclaims = self.custom.list_cluster_custom_object(
@@ -138,15 +103,46 @@ class KubernetesManager:
             except ApiException:
                 continue
             except Exception as e:
-                print(f"Error refreshing launching count: {e}")
+                print(f"Error refreshing node count: {e}")
                 return
-            launching = 0
+
+            ready_types = Counter()
+            launching_types = Counter()
+            all_types = Counter()  # includes unresolved-type claims, for pricing
             for nc in nodeclaims.get("items", []):
                 conditions = nc.get("status", {}).get("conditions", [])
-                if not any(c.get("type") == "Ready" and c.get("status") == "True" for c in conditions):
-                    launching += 1
+                is_ready = any(c.get("type") == "Ready" and c.get("status") == "True" for c in conditions)
+                itype = nc.get("metadata", {}).get("labels", {}).get("node.kubernetes.io/instance-type")
+                all_types[itype or "unknown"] += 1
+                if not itype:
+                    # Not resolved yet — skip the type breakdown entirely
+                    # rather than bucketing it under "unknown".
+                    continue
+                (ready_types if is_ready else launching_types)[itype] += 1
+
+            price_breakdown = sorted(
+                (
+                    {
+                        "type": itype,
+                        "count": count,
+                        "unit_price": INSTANCE_PRICES.get(itype, 0.0),
+                        "subtotal": INSTANCE_PRICES.get(itype, 0.0) * count,
+                    }
+                    for itype, count in all_types.items()
+                ),
+                key=lambda row: row["type"]
+            )
+            hourly_price = sum(row["subtotal"] for row in price_breakdown)
+            result = {
+                "total": sum(ready_types.values()),
+                "instance_types": dict(ready_types),
+                "launching": sum(launching_types.values()),
+                "launching_types": dict(launching_types),
+                "hourly_price": hourly_price,
+                "price_breakdown": price_breakdown,
+            }
             with self._lock:
-                self._cache["node_count"]["launching"] = launching
+                self._cache["node_count"].update(result)
             return
 
     def _refresh_nodepool_resources(self):

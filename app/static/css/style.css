@@ -126,11 +126,11 @@ body {
 .metric-card {
     background: white;
     border-radius: 30px;
-    padding: 28px 30px;
+    padding: 18px 30px;
     text-align: center;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s ease;
-    height: 260px;
+    height: 230px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -155,12 +155,20 @@ body {
     transition: all 0.3s ease;
 }
 
-.metric-price .metric-value {
-    font-size: 4rem;
+.metric-price {
+    height: 165px;
+    margin-bottom: 20px;
 }
 
-.metric-price {
-    margin-bottom: 20px;
+.metric-pods .metric-label,
+.metric-nodes .metric-label,
+.metric-price .metric-label {
+    margin-bottom: 15px;
+}
+
+.metric-detail-list-centered {
+    align-self: center;
+    flex: none;
 }
 
 .metric-label {
@@ -172,26 +180,40 @@ body {
     font-weight: 600;
 }
 
-.metric-pending {
-    font-size: 1.2rem;
-    /*color: #FF9800;*/
-    color: #667eea;
-    margin-top: 12px;
-    min-height: 1.4em;
-    font-weight: 500;
+.metric-split-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 25px;
+    width: 100%;
 }
 
-.node-type-list {
-    margin-top: 15px;
+.metric-split-main {
+    flex-shrink: 0;
+    padding-right: 25px;
+    border-right: 2px solid #e2e8f0;
+}
+
+.metric-split-row.no-details .metric-split-main {
+    padding-right: 0;
+    border-right: none;
+}
+
+.metric-split-row.no-details .metric-detail-list {
+    display: none;
+}
+
+.metric-detail-list {
     font-size: 0.85rem;
     color: #64748b;
     text-align: left;
-    width: 100%;
-    max-height: 40px;
+    flex: 1;
+    min-width: 0;
+    max-height: 120px;
     overflow-y: auto;
 }
 
-.node-type-item {
+.metric-detail-item {
     display: flex;
     justify-content: space-between;
     gap: 12px;
@@ -200,14 +222,136 @@ body {
     font-family: 'Monaco', 'Courier New', monospace;
 }
 
-.node-type-item:last-child {
+.metric-detail-item:last-child {
     border-bottom: none;
 }
 
-.node-type-count {
+.metric-detail-count {
     font-weight: 600;
     /*color: #667eea;*/
     color: #DA2A1B;
+}
+
+.metric-detail-highlight {
+    color: #667eea;
+}
+
+.info-icon {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 2px;
+    font-size: 1rem;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: color 0.2s ease;
+}
+
+.info-icon:hover {
+    color: #667eea;
+}
+
+/* Cost Breakdown Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-box {
+    position: relative;
+    background: white;
+    border-radius: 24px;
+    padding: 35px 40px;
+    min-width: 420px;
+    max-width: 90vw;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+}
+
+.modal-box h3 {
+    color: #DA2A1B;
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: #DA2A1B;
+}
+
+.invoice-table {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto auto;
+    column-gap: 24px;
+    row-gap: 8px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.95rem;
+    color: #475569;
+}
+
+.invoice-header {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.invoice-cell {
+    text-align: right;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.invoice-cell-left {
+    text-align: left;
+}
+
+.invoice-total-label,
+.invoice-total-value {
+    font-weight: 700;
+    color: #DA2A1B;
+    font-size: 1.05rem;
+    padding-top: 8px;
+}
+
+.invoice-total-label {
+    grid-column: 1 / 4;
+}
+
+.invoice-total-value {
+    text-align: right;
+}
+
+.invoice-empty {
+    grid-column: 1 / -1;
+    color: #94a3b8;
+    text-align: center;
+    padding: 10px 0;
 }
 
 /* Footer */

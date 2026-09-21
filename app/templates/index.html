@@ -36,21 +36,35 @@
             <!-- Right Column: Metrics -->
             <div class="metrics-column">
                 <div class="metric-card metric-pods">
-                    <div class="metric-value" id="pod-count">0</div>
                     <div class="metric-label">Pods</div>
-                    <div class="metric-pending" id="pod-pending"></div>
+                    <div class="metric-split-row">
+                        <div class="metric-split-main">
+                            <div class="metric-value" id="pod-count">0</div>
+                        </div>
+                        <div class="metric-detail-list">
+                            <div class="metric-detail-item"><span>Pending</span><span class="metric-detail-count metric-detail-highlight" id="pod-pending">0</span></div>
+                            <div class="metric-detail-item"><span>Running</span><span class="metric-detail-count" id="pod-running">0</span></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="metric-card metric-nodes">
-                    <div class="metric-value" id="node-count">0</div>
                     <div class="metric-label">Nodes</div>
-                    <div class="metric-pending" id="node-not-ready"></div>
-                    <div class="node-type-list" id="node-type-list"></div>
+                    <div class="metric-split-row no-details" id="metric-nodes-row">
+                        <div class="metric-split-main">
+                            <div class="metric-value" id="node-count">0</div>
+                        </div>
+                        <div class="metric-detail-list" id="node-type-list"></div>
+                    </div>
                 </div>
 
                 <div class="metric-card metric-price">
-                    <div class="metric-value" id="hourly-price">€0.00</div>
-                    <div class="metric-label">Hourly Cost</div>
+                    <div class="metric-label">Costs <button type="button" class="info-icon" id="cost-info-btn" aria-label="Show cost breakdown">ⓘ</button></div>
+                    <div class="metric-detail-list metric-detail-list-centered">
+                        <div class="metric-detail-item"><span>Hourly</span><span class="metric-detail-count" id="hourly-price">€0.00</span></div>
+                        <div class="metric-detail-item"><span>Daily</span><span class="metric-detail-count" id="daily-price">€0.00</span></div>
+                        <div class="metric-detail-item"><span>Monthly</span><span class="metric-detail-count" id="monthly-price">€0.00</span></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,6 +100,14 @@
             </div>
         </footer>
         //-->
+    </div>
+
+    <div class="modal-overlay" id="cost-modal-overlay">
+        <div class="modal-box">
+            <button type="button" class="modal-close" id="cost-modal-close" aria-label="Close">&times;</button>
+            <h3>Cost Breakdown</h3>
+            <div class="invoice-table" id="cost-invoice-table"></div>
+        </div>
     </div>
 
     <script>

@@ -4,6 +4,10 @@ let currentMemoryCapacityBytes = 0;
 let currentMemoryLimitBytes = 0;
 let pollingInterval = null;
 
+const HOURS_PER_DAY = 24;
+// Standard cloud-billing approximation (365.25 days/year * 24h / 12 months).
+const HOURS_PER_MONTH = 730;
+
 function initQRCode() {
     const qrContainer = document.getElementById('qrcode');
 
@@ -32,6 +36,7 @@ async function updatePodCount() {
         const data = await response.json();
         const newCount = data.count;
         const newPending = data.pending;
+        const newRunning = newCount - newPending;
 
         if (newCount !== currentPodCount) {
             currentPodCount = newCount;
@@ -51,9 +56,12 @@ async function updatePodCount() {
 
         const podPendingElement = document.getElementById('pod-pending');
         if (podPendingElement) {
-            podPendingElement.textContent = newPending > 0
-                ? `(${newPending} in Pending)`
-                : '';
+            podPendingElement.textContent = newPending;
+        }
+
+        const podRunningElement = document.getElementById('pod-running');
+        if (podRunningElement) {
+            podRunningElement.textContent = newRunning;
         }
         return true;
     } catch (error) {
@@ -72,8 +80,6 @@ async function updateNodeCount() {
 
         const data = await response.json();
         const newCount = data.count;
-        const newNotReady = data.not_ready;
-        const newLaunching = data.launching;
 
         if (newCount !== currentNodeCount) {
             currentNodeCount = newCount;
@@ -91,41 +97,126 @@ async function updateNodeCount() {
 
         }
 
-        const nodeNotReadyElement = document.getElementById('node-not-ready');
-        if (nodeNotReadyElement) {
-            // "launching" fires the instant Karpenter creates a NodeClaim,
-            // well before the instance boots and joins as a Node — show that
-            // first so a scale-up reads as instantaneous on screen.
-            if (newLaunching > 0) {
-                nodeNotReadyElement.textContent = `(🚀 ${newLaunching} launching)`;
-            } else if (newNotReady > 0) {
-                nodeNotReadyElement.textContent = `(+ ${newNotReady} coming soon)`;
-            } else {
-                nodeNotReadyElement.textContent = '';
-            }
-        }
+        const hourlyPrice = data.hourly_price || 0;
+        const dailyPrice = hourlyPrice * HOURS_PER_DAY;
+        const monthlyPrice = hourlyPrice * HOURS_PER_MONTH;
 
         const hourlyPriceElement = document.getElementById('hourly-price');
         if (hourlyPriceElement) {
-            const price = data.hourly_price || 0;
-            hourlyPriceElement.textContent = `€${price.toFixed(price < 1 ? 3 : 2)}`;
+            hourlyPriceElement.textContent = formatPrice(hourlyPrice);
         }
+
+        const dailyPriceElement = document.getElementById('daily-price');
+        if (dailyPriceElement) {
+            dailyPriceElement.textContent = formatPrice(dailyPrice);
+        }
+
+        const monthlyPriceElement = document.getElementById('monthly-price');
+        if (monthlyPriceElement) {
+            monthlyPriceElement.textContent = formatPrice(monthlyPrice);
+        }
+
+        renderCostBreakdown(data.price_breakdown || [], hourlyPrice);
 
         const typeList = document.getElementById('node-type-list');
         if (typeList) {
             const instanceTypes = data.instance_types || {};
-            typeList.innerHTML = Object.entries(instanceTypes)
-                .sort(([a], [b]) => a.localeCompare(b))
-                .map(([type, count]) =>
-                    `<div class="node-type-item"><span>${type}</span><span class="node-type-count">${count}</span></div>`
-                )
+            const launchingTypes = data.launching_types || {};
+            // Union of every type that's either already running or being
+            // launched by Karpenter right now, so a brand-new type shows up
+            // immediately even with zero ready nodes of that type yet.
+            const allTypes = new Set([...Object.keys(instanceTypes), ...Object.keys(launchingTypes)]);
+            const hasTypes = allTypes.size > 0;
+
+            typeList.innerHTML = [...allTypes]
+                .sort((a, b) => a.localeCompare(b))
+                .map((type) => {
+                    const ready = instanceTypes[type] || 0;
+                    const launching = launchingTypes[type] || 0;
+                    // "(+X)" comes before Y and Y is always the trailing
+                    // token, so Y stays anchored at the row's right edge —
+                    // launching nodes appearing/disappearing never shifts
+                    // the ready count's position.
+                    let countHtml = '';
+                    if (launching > 0) {
+                        countHtml += `<span class="metric-detail-highlight">(+${launching})</span>`;
+                    }
+                    if (ready > 0) {
+                        countHtml += `${launching > 0 ? ' ' : ''}${ready}`;
+                    }
+                    return `<div class="metric-detail-item"><span>${type}</span><span class="metric-detail-count">${countHtml}</span></div>`;
+                })
                 .join('');
+
+            const nodesRow = document.getElementById('metric-nodes-row');
+            if (nodesRow) {
+                nodesRow.classList.toggle('no-details', !hasTypes);
+            }
         }
         return true;
     } catch (error) {
         console.error('Error updating node count:', error);
         return false;
     }
+}
+
+function formatPrice(value) {
+    return `€${value.toFixed(value < 1 ? 3 : 2)}`;
+}
+
+function renderCostBreakdown(breakdown, hourlyTotal) {
+    const table = document.getElementById('cost-invoice-table');
+    if (!table) return;
+
+    if (!breakdown.length) {
+        table.innerHTML = '<div class="invoice-empty">No active nodes</div>';
+        return;
+    }
+
+    const rows = breakdown.map((row) => `
+        <div class="invoice-cell invoice-cell-left">${row.type}</div>
+        <div class="invoice-cell">${row.count}</div>
+        <div class="invoice-cell">${formatPrice(row.unit_price)}</div>
+        <div class="invoice-cell">${formatPrice(row.subtotal)}</div>
+        <div class="invoice-cell">${formatPrice(row.subtotal * HOURS_PER_DAY)}</div>
+        <div class="invoice-cell">${formatPrice(row.subtotal * HOURS_PER_MONTH)}</div>
+    `).join('');
+
+    const dailyTotal = hourlyTotal * HOURS_PER_DAY;
+    const monthlyTotal = hourlyTotal * HOURS_PER_MONTH;
+
+    table.innerHTML = `
+        <div class="invoice-header invoice-cell invoice-cell-left">Type</div>
+        <div class="invoice-header invoice-cell">Qty</div>
+        <div class="invoice-header invoice-cell">Unit /hr</div>
+        <div class="invoice-header invoice-cell">Subtotal /hr</div>
+        <div class="invoice-header invoice-cell">Subtotal /day</div>
+        <div class="invoice-header invoice-cell">Subtotal /month</div>
+        ${rows}
+        <div class="invoice-total-label">Total</div>
+        <div class="invoice-total-value">${formatPrice(hourlyTotal)}</div>
+        <div class="invoice-total-value">${formatPrice(dailyTotal)}</div>
+        <div class="invoice-total-value">${formatPrice(monthlyTotal)}</div>
+    `;
+}
+
+function initCostModal() {
+    const btn = document.getElementById('cost-info-btn');
+    const overlay = document.getElementById('cost-modal-overlay');
+    const closeBtn = document.getElementById('cost-modal-close');
+    if (!btn || !overlay || !closeBtn) return;
+
+    const open = () => overlay.classList.add('open');
+    const close = () => overlay.classList.remove('open');
+
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
 }
 
 const MIN_SIZE_PX = 80;
@@ -239,6 +330,7 @@ function stopPolling() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initQRCode();
+    initCostModal();
     startPolling();
     updateIconScale();
 });
