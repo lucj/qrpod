@@ -42,7 +42,8 @@
                             <div class="metric-value" id="pod-count">0</div>
                         </div>
                         <div class="metric-detail-list">
-                            <div class="metric-detail-item"><span>Pending</span><span class="metric-detail-count metric-detail-highlight" id="pod-pending">0</span></div>
+                            <div class="metric-detail-item hidden" id="pod-pending-row"><span>Pending</span><span class="metric-detail-count metric-detail-highlight" id="pod-pending">0</span></div>
+                            <div class="metric-detail-item hidden" id="pod-creating-row"><span>Creating</span><span class="metric-detail-count metric-detail-highlight" id="pod-creating">0</span></div>
                             <div class="metric-detail-item"><span>Running</span><span class="metric-detail-count" id="pod-running">0</span></div>
                             <div class="metric-detail-item hidden" id="pod-crashing-row"><span>Crashing</span><span class="metric-detail-count metric-detail-warn" id="pod-crashing">0</span></div>
                         </div>
@@ -65,6 +66,7 @@
                         <div class="metric-detail-item"><span>Hourly</span><span class="metric-detail-count" id="hourly-price">€0.00</span></div>
                         <div class="metric-detail-item"><span>Daily</span><span class="metric-detail-count" id="daily-price">€0.00</span></div>
                         <div class="metric-detail-item"><span>Monthly</span><span class="metric-detail-count" id="monthly-price">€0.00</span></div>
+                        <div class="metric-detail-item metric-detail-total"><button type="button" class="reset-link" id="cost-reset-btn" title="Click to reset">Total spent</button><span class="metric-detail-count" id="total-price">€0.00</span></div>
                     </div>
                 </div>
             </div>
@@ -86,10 +88,6 @@
                         <span class="np-limit" id="np-limit-memory"></span>
                     </div>
                     <span class="np-unit">Memory</span>
-                </div>
-                <div class="np-resource">
-                    <span class="np-value" id="np-pods">—</span>
-                    <span class="np-unit">Pods</span>
                 </div>
             </div>
         </div>

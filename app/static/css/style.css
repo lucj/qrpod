@@ -156,7 +156,7 @@ body {
 }
 
 .metric-price {
-    height: 165px;
+    height: 195px;
     margin-bottom: 20px;
 }
 
@@ -224,6 +224,29 @@ body {
 
 .metric-detail-item:last-child {
     border-bottom: none;
+}
+
+.metric-detail-total {
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 2px solid #e2e8f0;
+    font-weight: 600;
+}
+
+.reset-link {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.reset-link:hover {
+    color: #DA2A1B;
+    text-decoration: underline dotted;
 }
 
 .metric-detail-count {

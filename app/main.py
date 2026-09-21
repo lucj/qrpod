@@ -52,7 +52,12 @@ def scan():
 @app.route('/api/pod-count')
 def pod_count():
     counts = k8s_manager.get_pod_count()
-    return jsonify({'count': counts['total'], 'pending': counts['pending'], 'crashing': counts['crashing']})
+    return jsonify({
+        'count': counts['total'],
+        'pending': counts['pending'],
+        'creating': counts['creating'],
+        'crashing': counts['crashing'],
+    })
 
 
 @app.route('/api/node-count')
@@ -65,7 +70,15 @@ def node_count():
         'launching_types': counts['launching_types'],
         'hourly_price': counts['hourly_price'],
         'price_breakdown': counts['price_breakdown'],
+        'total_cost': k8s_manager.get_total_cost(),
     })
+
+
+@app.route('/api/reset-cost', methods=['POST'])
+@require_session
+def reset_cost():
+    k8s_manager.reset_total_cost()
+    return jsonify({'status': 'ok'})
 
 
 @app.route('/api/nodepool')

@@ -10,6 +10,9 @@ from config import config
 
 CACHE_TTL = 2  # seconds between Kubernetes API polls
 
+COST_CONFIGMAP_NAME = "qrpods-cost-tracker"
+COST_PERSIST_INTERVAL = 30  # seconds between ConfigMap writes for the running total
+
 PRICES_PATH = os.path.join(os.path.dirname(__file__), "assets", "prices.json")
 with open(PRICES_PATH) as f:
     INSTANCE_PRICES = {itype: float(price) for itype, price in json.load(f).items()}
@@ -38,11 +41,14 @@ class KubernetesManager:
         self.custom = client.CustomObjectsApi()
 
         self._cache = {
-            "pod_count":          {"total": 0, "pending": 0, "crashing": 0},
+            "pod_count":          {"total": 0, "pending": 0, "creating": 0, "crashing": 0},
             "node_count":         {"total": 0, "launching": 0, "instance_types": {}, "launching_types": {}, "hourly_price": 0.0, "price_breakdown": []},
             "nodepool_resources": {"capacity": {}, "limits": {}},
+            "total_cost":         self._load_total_cost(),
         }
         self._lock = threading.Lock()
+        self._last_cost_tick = time.time()
+        self._last_cost_persist = time.time()
 
         t = threading.Thread(target=self._poll_loop, daemon=True)
         t.start()
@@ -56,6 +62,7 @@ class KubernetesManager:
             try:
                 self._refresh_pod_count()
                 self._refresh_node_count()
+                self._accumulate_cost()
                 self._refresh_nodepool_resources()
             except Exception as e:
                 print(f"Unexpected error in poll loop: {e}")
@@ -71,6 +78,7 @@ class KubernetesManager:
             items = json.loads(raw.data).get("items", [])
             total = 0
             pending = 0
+            creating = 0
             crashing = 0
             for item in items:
                 phase = item.get("status", {}).get("phase", "")
@@ -81,15 +89,31 @@ class KubernetesManager:
                     pending += 1
                     continue
                 # A pod stuck in CrashLoopBackOff/OOMKilled still reports
-                # phase=Running (kubelet keeps restarting it) — only count it
-                # as actually running if every container is presently up.
+                # phase=Running (kubelet keeps restarting it), so a container
+                # not yet "running" isn't automatically a problem — a brand
+                # new pod normally has no containerStatuses at all for a
+                # moment, then sits in waiting/ContainerCreating (or
+                # PodInitializing) while the image pulls and starts. Only
+                # count it as crashing once it's past that normal startup.
                 container_statuses = item.get("status", {}).get("containerStatuses", [])
-                healthy = bool(container_statuses) and all(
-                    "running" in cs.get("state", {}) for cs in container_statuses
-                )
-                if not healthy:
+                if not container_statuses:
+                    creating += 1
+                    continue
+                is_crashing = False
+                is_creating = False
+                for cs in container_statuses:
+                    state = cs.get("state", {})
+                    if "running" in state:
+                        continue
+                    if state.get("waiting", {}).get("reason") in ("ContainerCreating", "PodInitializing"):
+                        is_creating = True
+                    else:
+                        is_crashing = True
+                if is_crashing:
                     crashing += 1
-            result = {"total": total, "pending": pending, "crashing": crashing}
+                elif is_creating:
+                    creating += 1
+            result = {"total": total, "pending": pending, "creating": creating, "crashing": crashing}
         except ApiException as e:
             print(f"Error refreshing pod count: {e}")
             return
@@ -157,6 +181,68 @@ class KubernetesManager:
                 self._cache["node_count"].update(result)
             return
 
+    # ------------------------------------------------------------------
+    # Cumulative cost tracking (persisted across restarts via a ConfigMap)
+    # ------------------------------------------------------------------
+
+    def _load_total_cost(self):
+        try:
+            cm = self.v1.read_namespaced_config_map(COST_CONFIGMAP_NAME, config.NAMESPACE)
+            return float((cm.data or {}).get("total_cost", "0"))
+        except ApiException as e:
+            if e.status != 404:
+                print(f"Error loading cost ConfigMap: {e}")
+            return 0.0
+
+    def _persist_total_cost(self, total_cost):
+        data = {"total_cost": f"{total_cost:.6f}"}
+        try:
+            self.v1.patch_namespaced_config_map(
+                COST_CONFIGMAP_NAME, config.NAMESPACE, {"data": data}
+            )
+        except ApiException as e:
+            if e.status != 404:
+                print(f"Error persisting cost ConfigMap: {e}")
+                return
+            try:
+                self.v1.create_namespaced_config_map(
+                    config.NAMESPACE,
+                    client.V1ConfigMap(
+                        metadata=client.V1ObjectMeta(name=COST_CONFIGMAP_NAME),
+                        data=data,
+                    ),
+                )
+            except ApiException as e2:
+                print(f"Error creating cost ConfigMap: {e2}")
+
+    def _accumulate_cost(self):
+        now = time.time()
+        elapsed = now - self._last_cost_tick
+        self._last_cost_tick = now
+
+        with self._lock:
+            hourly_price = self._cache["node_count"]["hourly_price"]
+            self._cache["total_cost"] += hourly_price * elapsed / 3600
+            current_total = self._cache["total_cost"]
+
+        # Exoscale bills by the second, but the running total only needs to
+        # survive a pod restart intact — writing it to the ConfigMap every
+        # poll (every CACHE_TTL seconds) would be needless etcd/watch churn,
+        # so the in-memory value updates every poll and is only flushed
+        # periodically.
+        if now - self._last_cost_persist >= COST_PERSIST_INTERVAL:
+            self._persist_total_cost(current_total)
+            self._last_cost_persist = now
+
+    def reset_total_cost(self):
+        with self._lock:
+            self._cache["total_cost"] = 0.0
+        # Bypass the periodic throttle for an explicit reset — the whole
+        # point is that it takes effect immediately, in memory and in the
+        # ConfigMap, without waiting up to COST_PERSIST_INTERVAL seconds.
+        self._persist_total_cost(0.0)
+        self._last_cost_persist = time.time()
+
     def _refresh_nodepool_resources(self):
         for version in ("v1", "v1beta1"):
             try:
@@ -197,6 +283,10 @@ class KubernetesManager:
     def get_nodepool_resources(self):
         with self._lock:
             return dict(self._cache["nodepool_resources"])
+
+    def get_total_cost(self):
+        with self._lock:
+            return self._cache["total_cost"]
 
     # ------------------------------------------------------------------
 

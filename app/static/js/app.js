@@ -36,8 +36,9 @@ async function updatePodCount() {
         const data = await response.json();
         const newCount = data.count;
         const newPending = data.pending;
+        const newCreating = data.creating;
         const newCrashing = data.crashing;
-        const newRunning = newCount - newPending - newCrashing;
+        const newRunning = newCount - newPending - newCreating - newCrashing;
 
         if (newCount !== currentPodCount) {
             currentPodCount = newCount;
@@ -58,6 +59,21 @@ async function updatePodCount() {
         const podPendingElement = document.getElementById('pod-pending');
         if (podPendingElement) {
             podPendingElement.textContent = newPending;
+        }
+
+        const podPendingRow = document.getElementById('pod-pending-row');
+        if (podPendingRow) {
+            podPendingRow.classList.toggle('hidden', newPending === 0);
+        }
+
+        const podCreatingElement = document.getElementById('pod-creating');
+        if (podCreatingElement) {
+            podCreatingElement.textContent = newCreating;
+        }
+
+        const podCreatingRow = document.getElementById('pod-creating-row');
+        if (podCreatingRow) {
+            podCreatingRow.classList.toggle('hidden', newCreating === 0);
         }
 
         const podRunningElement = document.getElementById('pod-running');
@@ -130,6 +146,11 @@ async function updateNodeCount() {
         const monthlyPriceElement = document.getElementById('monthly-price');
         if (monthlyPriceElement) {
             monthlyPriceElement.textContent = formatPrice(monthlyPrice);
+        }
+
+        const totalPriceElement = document.getElementById('total-price');
+        if (totalPriceElement) {
+            totalPriceElement.textContent = formatPrice(data.total_cost || 0);
         }
 
         renderCostBreakdown(data.price_breakdown || [], hourlyPrice);
@@ -235,6 +256,27 @@ function initCostModal() {
     });
 }
 
+function initCostReset() {
+    const btn = document.getElementById('cost-reset-btn');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        if (!confirm('Reset the total spent counter back to €0.00? This cannot be undone.')) {
+            return;
+        }
+        try {
+            const response = await fetch('/api/reset-cost', { method: 'POST' });
+            if (!response.ok) {
+                throw new Error('Failed to reset total spent');
+            }
+            updateNodeCount();
+        } catch (error) {
+            console.error('Error resetting total spent:', error);
+            alert('Failed to reset total spent. Please try again.');
+        }
+    });
+}
+
 const MIN_SIZE_PX = 80;
 
 function parseMemoryBytes(value) {
@@ -293,9 +335,6 @@ async function updateNodepoolResources() {
         const memEl = document.getElementById('np-memory');
         if (memEl) memEl.textContent = formatMemory(capacity.memory);
 
-        const podsEl = document.getElementById('np-pods');
-        if (podsEl) podsEl.textContent = capacity.pods || '—';
-
         const limitCpuEl = document.getElementById('np-limit-cpu');
         if (limitCpuEl) limitCpuEl.textContent = limits.cpu ? `/${limits.cpu}` : '';
 
@@ -347,6 +386,7 @@ function stopPolling() {
 document.addEventListener('DOMContentLoaded', function() {
     initQRCode();
     initCostModal();
+    initCostReset();
     startPolling();
     updateIconScale();
 });
