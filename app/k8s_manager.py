@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import math
 import time
@@ -17,9 +18,28 @@ COST_PERSIST_INTERVAL = 30  # seconds between ConfigMap writes for the running t
 MEMORY_POD_NAME = "qr-memory"
 CPU_POD_NAME = "qr-cpu"
 
-PRICES_PATH = os.path.join(os.path.dirname(__file__), "assets", "prices.json")
-with open(PRICES_PATH) as f:
-    INSTANCE_PRICES = {itype: float(price) for itype, price in json.load(f).items()}
+INSTANCES_PATH = os.path.join(os.path.dirname(__file__), "assets", "instances.json")
+with open(INSTANCES_PATH) as f:
+    INSTANCES = json.load(f)
+INSTANCE_PRICES = {itype: float(info["price"]) for itype, info in INSTANCES.items()}
+
+# Display order for the "Available Node Types" table: grouped by family
+# (standard, memory, cpu), ascending by RAM within each family.
+INSTANCE_FAMILY_ORDER = {"standard": 0, "cpu": 1, "memory": 2}
+
+
+def _ram_to_mb(ram_str):
+    match = re.match(r"([\d.]+)\s*(GB|MB)", ram_str or "", re.IGNORECASE)
+    if not match:
+        return 0
+    value, unit = match.groups()
+    return float(value) * 1024 if unit.upper() == "GB" else float(value)
+
+
+def _instance_sort_key(itype):
+    family = itype.split(".")[0]
+    ram = INSTANCES.get(itype, {}).get("RAM", "")
+    return (INSTANCE_FAMILY_ORDER.get(family, 99), _ram_to_mb(ram), itype)
 
 
 class KubernetesManager:
@@ -47,7 +67,7 @@ class KubernetesManager:
         self._cache = {
             "pod_count":          {"total": 0, "pending": 0, "creating": 0, "crashing": 0, "terminating": 0},
             "node_count":         {"total": 0, "launching": 0, "instance_types": {}, "launching_types": {}, "terminating": 0, "terminating_types": {}, "hourly_price": 0.0, "price_breakdown": []},
-            "nodepool_resources": {"capacity": {}, "limits": {}, "available_types": []},
+            "nodepool_resources": {"capacity": {}, "limits": {}, "available_type_specs": []},
             "total_cost":         self._load_total_cost(),
         }
         self._lock = threading.Lock()
@@ -289,10 +309,18 @@ class KubernetesManager:
                     for req in requirements:
                         if req.get('key') == 'node.kubernetes.io/instance-type' and req.get('operator') == 'In':
                             available_types.update(req.get('values', []))
+                available_type_specs = [
+                    {
+                        "type": itype,
+                        "ram": INSTANCES.get(itype, {}).get("RAM", "—"),
+                        "cpu": INSTANCES.get(itype, {}).get("CPU", "—"),
+                    }
+                    for itype in sorted(available_types, key=_instance_sort_key)
+                ]
                 result = {
                     "capacity": capacity,
                     "limits": limits,
-                    "available_types": sorted(available_types),
+                    "available_type_specs": available_type_specs,
                 }
             except ApiException:
                 continue

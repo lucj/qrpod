@@ -354,7 +354,7 @@ body {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 
@@ -508,20 +508,15 @@ body {
     font-weight: 600;
 }
 
-.type-chip-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    max-width: 480px;
-}
-
-.type-chip {
-    background: #f1f5f9;
-    color: #475569;
+.instance-table {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    column-gap: 24px;
+    row-gap: 8px;
     font-family: 'Monaco', 'Courier New', monospace;
-    font-size: 0.9rem;
-    padding: 6px 14px;
-    border-radius: 20px;
+    font-size: 0.95rem;
+    color: #475569;
+    max-width: 480px;
 }
 
 .modal-link {

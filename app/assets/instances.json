@@ -1,0 +1,82 @@
+{
+  "standard.huge": {
+    "RAM": "32GB",
+    "CPU": "8 cores",
+    "price": "0.37334000"
+  },
+  "standard.extra-large": {
+    "RAM": "16GB",
+    "CPU": "4 cores",
+    "price": "0.18667000"
+  },
+  "standard.large": {
+    "RAM": "8GB",
+    "CPU": "4 cores",
+    "price": "0.09333000"
+  },
+  "standard.mega": {
+    "RAM": "64GB",
+    "CPU": "12 cores",
+    "price": "0.74667000"
+  },
+  "standard.medium": {
+    "RAM": "4GB",
+    "CPU": "2 cores",
+    "price": "0.04666000"
+  },
+  "standard.micro": {
+    "RAM": "512MB",
+    "CPU": "1 core",
+    "price": "0.00729000"
+  },
+  "standard.small": {
+    "RAM": "2GB",
+    "CPU": "2 cores",
+    "price": "0.02333000"
+  },
+  "standard.titan": {
+    "RAM": "128GB",
+    "CPU": "16 cores",
+    "price": "1.49333000"
+  },
+  "cpu.extra-large": {
+    "RAM": "16GB",
+    "CPU": "8 cores",
+    "price": "0.23333000"
+  },
+  "cpu.huge": {
+    "RAM": "32GB",
+    "CPU": "16 cores",
+    "price": "0.46666000"
+  },
+  "cpu.mega": {
+    "RAM": "64GB",
+    "CPU": "32 cores",
+    "price": "0.93333000"
+  },
+  "cpu.titan": {
+    "RAM": "128GB",
+    "CPU": "40 cores",
+    "price": "1.86667000"
+  },
+  "memory.extra-large": {
+    "RAM": "16GB",
+    "CPU": "2 cores",
+    "price": "0.14000000"
+  },
+  "memory.huge": {
+    "RAM": "32GB",
+    "CPU": "4 cores",
+    "price": "0.28000000"
+  },
+  "memory.mega": {
+    "RAM": "64GB",
+    "CPU": "8 cores",
+    "price": "0.56000000"
+  },
+  "memory.titan": {
+    "RAM": "128GB",
+    "CPU": "12 cores",
+    "price": "1.12000000"
+  }
+}

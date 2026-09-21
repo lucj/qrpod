@@ -335,10 +335,13 @@ function initDeleteModal() {
     const overlay = document.getElementById('delete-modal-overlay');
     const closeBtn = document.getElementById('delete-modal-close');
     const select = document.getElementById('delete-percent-select');
+    const controls = document.getElementById('delete-modal-controls');
     const countEl = document.getElementById('delete-deployment-count');
+    const withCountEl = document.getElementById('delete-modal-with-count');
+    const emptyEl = document.getElementById('delete-modal-empty');
     const previewEl = document.getElementById('delete-preview-count');
     const confirmBtn = document.getElementById('delete-confirm-btn');
-    if (!btn || !overlay || !closeBtn || !select || !countEl || !previewEl || !confirmBtn) return;
+    if (!btn || !overlay || !closeBtn || !select || !controls || !countEl || !withCountEl || !emptyEl || !previewEl || !confirmBtn) return;
 
     let currentCount = 0;
 
@@ -359,9 +362,18 @@ function initDeleteModal() {
             const data = await response.json();
             currentCount = data.count || 0;
             countEl.textContent = currentCount;
+            const isEmpty = currentCount === 0;
+            withCountEl.classList.toggle('hidden', isEmpty);
+            emptyEl.classList.toggle('hidden', !isEmpty);
+            controls.classList.toggle('hidden', isEmpty);
+            confirmBtn.classList.toggle('hidden', isEmpty);
             updatePreview();
         } catch (error) {
             countEl.textContent = '—';
+            withCountEl.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+            controls.classList.add('hidden');
+            confirmBtn.classList.add('hidden');
             console.error('Error fetching deployment count:', error);
         }
     }
@@ -593,10 +605,18 @@ async function updateNodepoolResources() {
 
         const typesEl = document.getElementById('nodes-available-types');
         if (typesEl) {
-            const availableTypes = data.available_types || [];
-            typesEl.innerHTML = availableTypes
-                .map((type) => `<span class="type-chip">${type}</span>`)
-                .join('');
+            const specs = data.available_type_specs || [];
+            const rows = specs.map((spec) => `
+                <div class="invoice-cell invoice-cell-left">${spec.type}</div>
+                <div class="invoice-cell">${spec.ram}</div>
+                <div class="invoice-cell">${spec.cpu}</div>
+            `).join('');
+            typesEl.innerHTML = `
+                <div class="invoice-header invoice-cell invoice-cell-left">Type</div>
+                <div class="invoice-header invoice-cell">RAM</div>
+                <div class="invoice-header invoice-cell">CPU</div>
+                ${rows}
+            `;
         }
         return true;
     } catch (error) {

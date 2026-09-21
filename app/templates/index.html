@@ -147,8 +147,9 @@
         <div class="modal-box">
             <button type="button" class="modal-close" id="delete-modal-close" aria-label="Close">&times;</button>
             <h3>Delete Deployments</h3>
-            <p class="delete-modal-count">Deployments running on Karpenter nodes: <strong id="delete-deployment-count">—</strong></p>
-            <div class="delete-modal-controls">
+            <p class="delete-modal-count" id="delete-modal-with-count">Deployments running on Karpenter nodes: <strong id="delete-deployment-count">—</strong></p>
+            <p class="delete-modal-count hidden" id="delete-modal-empty">There is no deployment to delete.</p>
+            <div class="delete-modal-controls" id="delete-modal-controls">
                 <label for="delete-percent-select">Delete</label>
                 <select id="delete-percent-select">
                     <option value="10">10%</option>
@@ -167,8 +168,8 @@
         <div class="modal-box">
             <button type="button" class="modal-close" id="nodes-modal-close" aria-label="Close">&times;</button>
             <h3>Available Node Types</h3>
-            <div class="type-chip-list" id="nodes-available-types"></div>
-            <a class="modal-link" href="https://www.exoscale.com/pricing/" target="_blank" rel="noopener noreferrer">See Exoscale node pricing →</a>
+            <div class="instance-table" id="nodes-available-types"></div>
+            <a class="modal-link" href="https://www.exoscale.com/pricing/" target="_blank" rel="noopener noreferrer">See Exoscale available nodes →</a>
         </div>
     </div>
 
