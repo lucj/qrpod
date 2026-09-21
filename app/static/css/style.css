@@ -97,10 +97,50 @@ body {
 /* Visualization Column */
 .visualization-column {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 36px;
     overflow: hidden;
     align-self: stretch;
+}
+
+.capacity-tooltip {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    padding: 18px 32px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.capacity-tooltip-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #DA2A1B;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+    white-space: nowrap;
+}
+
+.capacity-tooltip-resources {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+}
+
+.capacity-tooltip-arrow {
+    position: absolute;
+    bottom: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 11px solid white;
 }
 
 .scaling-icon-big {
@@ -403,43 +443,16 @@ body {
     border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
-/* NodePool Resources Bar */
-.nodepool-bar {
-    background: white;
-    border-radius: 20px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
-}
-
-.nodepool-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 50px;
-    padding: 20px 50px;
-}
-
+/* Cluster capacity/limits, shown in the capacity-tooltip callout */
 .np-value-group {
     display: flex;
     align-items: baseline;
 }
 
 .np-limit {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     color: #94a3b8;
     font-weight: 500;
-}
-
-.np-bar-label {
-    font-size: 2rem;
-    font-weight: 700;
-    /*color: #667eea;*/
-    color: #DA2A1B;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    padding-right: 30px;
-    border-right: 2px solid #e2e8f0;
 }
 
 .np-resource {

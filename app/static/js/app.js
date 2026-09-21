@@ -93,7 +93,10 @@ async function updatePodCount() {
 
         const podsRow = document.getElementById('metric-pods-row');
         if (podsRow) {
-            podsRow.classList.toggle('no-details', newCount === 0);
+            // Nothing worth breaking out separately: either there are no
+            // pods at all, or every pod is running (same number as the
+            // big total already shown on the left).
+            podsRow.classList.toggle('no-details', newCount === 0 || newRunning === newCount);
         }
         return true;
     } catch (error) {
@@ -150,7 +153,7 @@ async function updateNodeCount() {
 
         const totalPriceElement = document.getElementById('total-price');
         if (totalPriceElement) {
-            totalPriceElement.textContent = formatPrice(data.total_cost || 0);
+            totalPriceElement.textContent = `€${(data.total_cost || 0).toFixed(2)}`;
         }
 
         renderCostBreakdown(data.price_breakdown || [], hourlyPrice);
@@ -295,9 +298,18 @@ function parseMemoryBytes(value) {
 function updateIconScale() {
     const icon = document.getElementById('scaling-icon');
     const column = document.querySelector('.visualization-column');
+    const tooltip = document.querySelector('.capacity-tooltip');
 
     if (icon && column) {
-        const maxSize = Math.min(column.clientWidth, column.clientHeight);
+        // The tooltip shares the column (stacked above the icon via
+        // flex-direction: column), so its height + the gap between them
+        // must be subtracted before sizing the icon, or a large icon would
+        // push the tooltip out of view / overflow the column.
+        const columnStyle = getComputedStyle(column);
+        const gap = parseFloat(columnStyle.rowGap || columnStyle.gap || '0') || 0;
+        const tooltipSpace = tooltip ? tooltip.offsetHeight + gap : 0;
+        const availableHeight = column.clientHeight - tooltipSpace;
+        const maxSize = Math.min(column.clientWidth, availableHeight);
         const ratio = currentMemoryLimitBytes > 0
             ? Math.min(currentMemoryCapacityBytes / currentMemoryLimitBytes, 1)
             : 0;

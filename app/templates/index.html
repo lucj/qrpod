@@ -28,6 +28,26 @@
 
             <!-- Center Column: Visualization -->
             <div class="visualization-column">
+                <div class="capacity-tooltip">
+                    <div class="capacity-tooltip-title">capacity<span class="np-limit"> / limits</span></div>
+                    <div class="capacity-tooltip-resources">
+                        <div class="np-resource">
+                            <div class="np-value-group">
+                                <span class="np-value" id="np-cpu">—</span>
+                                <span class="np-limit" id="np-limit-cpu"></span>
+                            </div>
+                            <span class="np-unit">CPU</span>
+                        </div>
+                        <div class="np-resource">
+                            <div class="np-value-group">
+                                <span class="np-value" id="np-memory">—</span>
+                                <span class="np-limit" id="np-limit-memory"></span>
+                            </div>
+                            <span class="np-unit">Memory</span>
+                        </div>
+                    </div>
+                    <div class="capacity-tooltip-arrow"></div>
+                </div>
                 <div id="scaling-icon" class="scaling-icon-big">
                     <img src="{{ url_for('static', filename='images/kubernetes.png') }}" alt="Kubernetes">
                 </div>
@@ -68,26 +88,6 @@
                         <div class="metric-detail-item"><span>Monthly</span><span class="metric-detail-count" id="monthly-price">€0.00</span></div>
                         <div class="metric-detail-item metric-detail-total"><button type="button" class="reset-link" id="cost-reset-btn" title="Click to reset">Total spent</button><span class="metric-detail-count" id="total-price">€0.00</span></div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="nodepool-bar">
-            <div class="nodepool-row">
-                <span class="np-bar-label">Capacity<span class="np-limit">/Limits</span></span>
-                <div class="np-resource">
-                    <div class="np-value-group">
-                        <span class="np-value" id="np-cpu">—</span>
-                        <span class="np-limit" id="np-limit-cpu"></span>
-                    </div>
-                    <span class="np-unit">CPU</span>
-                </div>
-                <div class="np-resource">
-                    <div class="np-value-group">
-                        <span class="np-value" id="np-memory">—</span>
-                        <span class="np-limit" id="np-limit-memory"></span>
-                    </div>
-                    <span class="np-unit">Memory</span>
                 </div>
             </div>
         </div>
