@@ -447,11 +447,6 @@ body {
     cursor: pointer;
 }
 
-#delete-preview-count {
-    color: #94a3b8;
-    font-size: 0.9rem;
-}
-
 .delete-confirm-btn {
     background: #DA2A1B;
     color: white;

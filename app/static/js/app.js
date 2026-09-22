@@ -351,19 +351,10 @@ function initDeleteModal() {
     const countEl = document.getElementById('delete-deployment-count');
     const withCountEl = document.getElementById('delete-modal-with-count');
     const emptyEl = document.getElementById('delete-modal-empty');
-    const previewEl = document.getElementById('delete-preview-count');
     const confirmBtn = document.getElementById('delete-confirm-btn');
-    if (!btn || !overlay || !closeBtn || !select || !controls || !countEl || !withCountEl || !emptyEl || !previewEl || !confirmBtn) return;
+    if (!btn || !overlay || !closeBtn || !select || !controls || !countEl || !withCountEl || !emptyEl || !confirmBtn) return;
 
     let currentCount = 0;
-
-    function updatePreview() {
-        const percent = parseInt(select.value, 10);
-        const toDelete = Math.ceil(currentCount * percent / 100);
-        previewEl.textContent = currentCount > 0
-            ? `≈ ${toDelete} deployment${toDelete === 1 ? '' : 's'} will be deleted`
-            : '';
-    }
 
     async function open() {
         overlay.classList.add('open');
@@ -379,7 +370,6 @@ function initDeleteModal() {
             emptyEl.classList.toggle('hidden', !isEmpty);
             controls.classList.toggle('hidden', isEmpty);
             confirmBtn.classList.toggle('hidden', isEmpty);
-            updatePreview();
         } catch (error) {
             countEl.textContent = '—';
             withCountEl.classList.remove('hidden');
@@ -400,7 +390,6 @@ function initDeleteModal() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') close();
     });
-    select.addEventListener('change', updatePreview);
 
     confirmBtn.addEventListener('click', async () => {
         const percent = parseInt(select.value, 10);

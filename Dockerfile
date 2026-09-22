@@ -19,4 +19,4 @@ EXPOSE 5000
 ENV FLASK_APP=main:app
 ENV FLASK_ENV=production
 
-CMD ["uv", "run", "gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "main:app"]
+CMD ["uv", "run", "gunicorn", "-w", "1", "-b", "0.0.0.0:5000", "main:app"]

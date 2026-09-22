@@ -150,7 +150,7 @@
             <button type="button" class="modal-close" id="delete-modal-close" aria-label="Close">&times;</button>
             <h3>Delete Deployments</h3>
             <p class="delete-modal-count" id="delete-modal-with-count">Deployments running on Karpenter nodes: <strong id="delete-deployment-count">—</strong></p>
-            <p class="delete-modal-count hidden" id="delete-modal-empty">There is no deployment to delete.</p>
+            <p class="delete-modal-count hidden" id="delete-modal-empty">No deployment running on Karpenter nodes.</p>
             <div class="delete-modal-controls" id="delete-modal-controls">
                 <label for="delete-percent-select">Delete</label>
                 <select id="delete-percent-select">
@@ -160,7 +160,6 @@
                     <option value="75">75%</option>
                     <option value="100">100%</option>
                 </select>
-                <span id="delete-preview-count"></span>
             </div>
             <button type="button" class="delete-confirm-btn" id="delete-confirm-btn">Delete</button>
         </div>
