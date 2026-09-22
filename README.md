@@ -22,8 +22,11 @@ A demo application for Kubernetes that displays a QR code on a big screen. When 
 
 Set the following env vars:
 
+Note: they will be used when deploying the app with Helmfile.
+
 - SCAN_TOKEN: authenticate scans
 - DASHBOARD_PASSWORD: access to the dashboard
+- SECRET_KEY: used by Flask to signe the session
 - QRPOD_REGISTRY_USER: access to the github image
 - QRPOD_REGISTRY_PASS: access to the github image
 - QRPOD_REGISTRY_EMAIL: access to the github image
@@ -53,13 +56,13 @@ spec:
 - create the nodeclass resource
 
 ```bash
-k apply -f ./infra/nodeclass.yaml
+kubectl apply -f ./infra/nodeclass.yaml
 ```
 
 - create the Karpenter NodePool
 
 ```bash
-k apply -f ./infra/nodepool.yaml
+kubectl apply -f ./infra/nodepool.yaml
 ```
 
 - Deploy Traefik
@@ -74,8 +77,6 @@ helmfile -f ./infra/helmfile.yaml.gotmpl -l app=traefik apply
 EXTERNAL_IP=$(kubectl get svc -n traefik -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 ```
 
-- Create an A record in the DNS provider so that qrpods.exoscale.dev resolves to the EXTERNAL_IP
-
 - Deploy cert-manager
 
 ```bash
@@ -85,7 +86,8 @@ helmfile -f ./infra/helmfile.yaml.gotmpl -l app=cert-manager apply
 - Deploy the application
 
 ```bash
-helmfile -f ./infra/helmfile.yaml.gotmpl -l app=qrpods apply
+DOMAIN="$EXTERNAL_IP.nip.io"
+helmfile -f ./infra/helmfile.yaml.gotmpl -l app=qrpods apply --set app.url="$DOMAIN"
 ```
 
 ## Usage Flow

@@ -1,6 +1,6 @@
 # Application configuration
 app:
-  url: "qrpods.exoscale.dev"
+  url: ""
   namespace: default
   replicas: 1
   tls: true
@@ -9,13 +9,13 @@ app:
 ttlCleanup:
   enabled: true
   schedule: "*/1 * * * *"
-  ttlSeconds: 360
+  ttlSeconds: 180
 
 # Image configuration
 image:
   registry: ghcr.io
   repository: lucj/qrpod
-  tag: v1.0.11
+  tag: latest
   pullPolicy: IfNotPresent
 
 # App resources
