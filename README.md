@@ -37,7 +37,7 @@ Note: they will be used when deploying the app with Helmfile.
 
 - Get the kubeconfig and copy it in ./kubeconfig
 
-- Get the ID of the security group (example: fd0bd62c-eb19-45e3-b528-2ed5c8d3050a)
+- Get the ID of the security group
 
 - Copy this ID in the ./infra/nodeclass.yaml specification
 
@@ -50,7 +50,7 @@ spec:
   imageTemplateSelector:
     version: "1.37.0"
   securityGroupSelectorTerms:
-    - id: "fd0bd62c-eb19-45e3-b528-2ed5c8d3050a" # <-- Use the SG retrieved above
+    - id: "REPLACE_WITH_YOUR_SECURITY_GROUP_ID"
 ```
 
 - create the nodeclass resource
@@ -73,11 +73,29 @@ helmfile -f ./infra/helmfile.yaml.gotmpl -l app=traefik apply
 
 - Get external IP address
 
+Note: you may need to wait a few tens of seconds before it is available
+
 ```bash
 EXTERNAL_IP=$(kubectl get svc -n traefik -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 ```
 
 - Deploy cert-manager
+
+Note: you first need to replace the placeholder with your email in *infra/helmfile.yaml.gotmpl*.
+
+```yaml
+...
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: REPLACE_WITH_YOUR_EMAIL      <--
+    privateKeySecretRef:
+      name: letsencrypt-key
+    solvers:
+      - http01:
+          ingress:
+            class: traefik
+```
 
 ```bash
 helmfile -f ./infra/helmfile.yaml.gotmpl -l app=cert-manager apply

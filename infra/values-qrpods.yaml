@@ -9,7 +9,7 @@ app:
 ttlCleanup:
   enabled: true
   schedule: "*/1 * * * *"
-  ttlSeconds: 180
+  ttlSeconds: 300
 
 # Image configuration
 image:

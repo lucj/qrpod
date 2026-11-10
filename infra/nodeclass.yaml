@@ -6,4 +6,4 @@ spec:
   imageTemplateSelector:
     version: "1.37.0"
   securityGroupSelectorTerms:
-    - id: "fd0bd62c-eb19-45e3-b528-2ed5c8d3050a"
+    - id: "REPLACE_WITH_YOUR_SECURITY_GROUP_ID"
