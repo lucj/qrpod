@@ -440,7 +440,15 @@ class KubernetesManager:
                                     ]
                                 }
                             }
-                        }
+                        },
+                        "tolerations": [
+                            {
+                                "key": "dedicated",
+                                "operator": "Equal",
+                                "value": "karpenter",
+                                "effect": "NoSchedule"
+                            }
+                        ]
                     }
                 }
             }
