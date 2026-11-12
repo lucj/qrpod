@@ -117,10 +117,6 @@ Once we're logged in, we cannot see any Pod nor Node as we haven't created any P
 
 ![](./images/no-node.png)
 
-This is an example of the QR Code scanned.
-
-![](./images/scan-result.png)
-
 If the QR code is sanned a lot, then it triggers the creation of several Karpenter Nodes.
 
 ![](./images/node-creation-1.png)
