@@ -1,14 +1,16 @@
 ## Scan Me Maybe: QR Code Driven Pod Scaling With Karpenter
 
-A demo application for Kubernetes that displays a QR code on a big screen. When participants scan it with their phones, it creates 1-10 random pods and shows a visual icon that inflates as pods scale up. Perfect for presentations and demos showcasing Karpenter node autoscaling.
+Exoscale is the first European cloud provider to offer fully integrated Karpenter autoscaling for managed Kubernetes. This repo contains a demo application, that should be deployed on an Exoscale-managed Kubernetes, illustrating the Karpenter capabilities.
+
+![](./images/qrpods.png)
+
+When participants scan the QR code with their phones, it creates 1-10 random pods, and shows the evolution of th number of nodes in the cluster. Perfect for presentations and demos showcasing Karpenter node autoscaling :).
 
 ## Features
 
-- **Big Screen Display** - Shows QR code, live visualization, pod count, and node count
-- **Mobile Result Page** - Participants see "WOW! You created X Pods" after scanning
-- **Real-time Updates** - Metrics update every couple of seconds
-- **Visual Scaling** - Icon grows 10% per pod created (max 5x)
-- **Token Security** - Basic authentication to prevent abuse
+- **Big Screen Display**: shows QR code, live visualization, pod count, and node count
+- **Mobile Result Page**: participants see "WOW! You created X Pods" after scanning
+- **Real-time Updates**: metrics update every couple of seconds
 
 ## Architecture
 
@@ -18,28 +20,19 @@ A demo application for Kubernetes that displays a QR code on a big screen. When 
   - `/` - Big screen display with QR code and live metrics
   - `/scan?token=X` - Mobile result page after scanning
 
-## Environment variables
-
-Set the following env vars:
-
-Note: they will be used when deploying the app with Helmfile.
-
-- SCAN_TOKEN: authenticate scans
-- DASHBOARD_PASSWORD: access to the dashboard
-- SECRET_KEY: used by Flask to signe the session
-- QRPOD_REGISTRY_USER: access to the github image
-- QRPOD_REGISTRY_PASS: access to the github image
-- QRPOD_REGISTRY_EMAIL: access to the github image
-
 ## Setup
 
-- Create an SKS cluster with a default nodepool
+- Prerequisites
+
+  Install [helmfile](https://github.com/helmfile/helmfile), a very useful tool to install helm chart in a declarative waY.
+
+- Create an SKS cluster with a default nodepool with 2 medium nodes.
 
 - Get the kubeconfig and copy it in ./kubeconfig
 
 - Get the ID of the security group
 
-- Copy this ID in the ./infra/nodeclass.yaml specification
+- Copy this ID in the **./infra/nodeclass.yaml** specification
 
 ```yaml
 apiVersion: karpenter.exoscale.com/v1
@@ -53,13 +46,13 @@ spec:
     - id: "REPLACE_WITH_YOUR_SECURITY_GROUP_ID"
 ```
 
-- create the nodeclass resource
+- create the *ExoscaleNodeClass* resource
 
 ```bash
 kubectl apply -f ./infra/nodeclass.yaml
 ```
 
-- create the Karpenter NodePool
+- create the Karpenter *NodePool* resource
 
 ```bash
 kubectl apply -f ./infra/nodepool.yaml
@@ -101,6 +94,12 @@ spec:
 helmfile -f ./infra/helmfile.yaml.gotmpl -l app=cert-manager apply
 ```
 
+- Set the following env vars (they will be used when deploying the app with Helmfile)
+
+  * SCAN_TOKEN: authenticate scans
+  * DASHBOARD_PASSWORD: access to the dashboard
+  * SECRET_KEY: used by Flask to signe the session
+
 - Deploy the application
 
 ```bash
@@ -108,21 +107,31 @@ DOMAIN="$EXTERNAL_IP.nip.io"
 helmfile -f ./infra/helmfile.yaml.gotmpl -l app=qrpods apply --set app.url="$DOMAIN"
 ```
 
-## Usage Flow
+## Access the application
 
-1. **Display big screen** showing QR code, visualization, and metrics
-2. **Participants scan QR code** with their mobile devices
-3. **System creates 1-10 random pods** in the cluster
-4. **Mobile shows result:** "WOW! You created X Pods" with pod names
-5. **Big screen updates live:** Pod count, node count (if Karpenter scales), and icon inflates
+The dashboard is available at *https://$DOMAIN.nip.io* 
 
-## API Endpoints
+![](./images/login.png)
 
-- `GET /` - Big screen display page
-- `GET /scan?token=X` - Mobile result page (creates pods)
-- `GET /api/pod-count` - Returns current pod count
-- `GET /api/node-count` - Returns current node count
-- `GET /health` - Health check
+Once we're logged in, we cannot see any Pod nor Node as we haven't created any Pod yet.
+
+![](./images/no-node.png)
+
+This is an example of the QR Code scanned.
+
+![](./images/scan-result.png)
+
+If the QR code is sanned a lot, then it triggers the creation of several Karpenter Nodes.
+
+![](./images/node-creation-1.png)
+
+It takes a few tens of seconds for the Nodes to be created and the Pods to be scheduled on them. 
+
+![](./images/node-creation-2.png)
+
+The Pods are automatically deleted after 5 minutes. It takes a couple of minutes for the Karpenter Nodes to be removed.
+
+![](./images/node-removal.png)
 
 ## Cleanup
 

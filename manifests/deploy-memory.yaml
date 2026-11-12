@@ -23,6 +23,11 @@ spec:
             - matchExpressions:
               - key: karpenter.sh/nodepool
                 operator: Exists
+      tolerations:
+      - key: dedicated
+        operator: Equal
+        value: karpenter
+        effect: NoSchedule
       containers:
       - image: nginx:alpine
         imagePullPolicy: IfNotPresent

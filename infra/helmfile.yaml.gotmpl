@@ -14,8 +14,8 @@ releases:
     namespace: cert-manager
     labels:
       app: cert-manager
-    chart: jetstack/cert-manager
-    version: v1.21.2
+    chart: oci://quay.io/jetstack/charts/cert-manager
+    version: v1.21.3
     values:
       - values-cert-manager.yaml
     createNamespace: true
@@ -34,7 +34,7 @@ releases:
             spec:
               acme:
                 server: https://acme-v02.api.letsencrypt.org/directory
-                email: REPLACE_WITH_YOUR_EMAIL
+                email: REPLACE_WITH_YOUR_EMAIL   <---
                 privateKeySecretRef:
                   name: letsencrypt-key
                 solvers:
@@ -57,8 +57,4 @@ releases:
           scanToken: {{ requiredEnv "SCAN_TOKEN" }}
           dashboardPassword: {{ requiredEnv "DASHBOARD_PASSWORD" }}
           secretKey: {{ requiredEnv "SECRET_KEY" }}
-        registry:
-          user: {{ requiredEnv "QRPOD_REGISTRY_USER" }}
-          pass: {{ requiredEnv "QRPOD_REGISTRY_PASS" }}
-          email: {{ requiredEnv "QRPOD_REGISTRY_EMAIL" }}
     createNamespace: true

@@ -13,8 +13,6 @@ spec:
         app: qrpods-ui
     spec:
       serviceAccountName: qrpods
-      imagePullSecrets:
-      - name: registry
       containers:
       - name: qrpods
         image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"

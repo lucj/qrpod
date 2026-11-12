@@ -12,6 +12,10 @@ spec:
         group: karpenter.exoscale.com
         kind: ExoscaleNodeClass
         name: standard
+      taints:
+        - key: dedicated
+          value: karpenter
+          effect: NoSchedule
       requirements:
         - key: "node.kubernetes.io/instance-type"
           operator: In
